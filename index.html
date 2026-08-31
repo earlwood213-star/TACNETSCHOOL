@@ -527,8 +527,9 @@
         let busMarkers = {};
         let fleetData = [];
 
-        const baseLat = 37.5854;
-        const baseLng = -79.0514;
+        // HARDCODED MAP CENTER: AMHERST COUNTY, VIRGINIA
+        const baseLat = 37.5815;
+        const baseLng = -79.0506;
 
         // Initialize 20 completely blank bus slots for the school
         for (let i = 1; i <= 20; i++) {
@@ -647,7 +648,8 @@
         }
 
         function initMap() {
-            map = L.map('map').setView([baseLat, baseLng], 12);
+            // SETTING THE MAP TO CENTER DIRECTLY ON AMHERST, VA AT ZOOM LEVEL 13
+            map = L.map('map').setView([baseLat, baseLng], 13);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
