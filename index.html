@@ -9,7 +9,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
         body { background: #021078; color: #ffffff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* HEADER RESTORATION */
+        /* RESTORED HEADER & BANNER */
         header { 
             background: #010a4a; 
             padding: 8px 15px; 
@@ -29,10 +29,11 @@
             color: #000;
             font-weight: bold;
             font-size: 13px;
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 4px;
             text-align: center;
             letter-spacing: 0.5px;
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
         }
 
         .nav-group { display: flex; gap: 8px; }
@@ -54,7 +55,7 @@
         .hidden { display: none !important; }
 
         /* DRIVER VIEW */
-        #driver-view { max-width: 480px; margin: auto; flex-direction: column; gap: 15px; padding: 20px; }
+        #driver-view { max-width: 500px; margin: auto; flex-direction: column; gap: 15px; padding: 20px; }
         .card { background: rgba(10, 50, 160, 0.6); border: 2px solid #00f0ff; border-radius: 12px; padding: 15px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         
@@ -64,54 +65,80 @@
         .btn-green { background: #22c55e; }
         .btn-yellow { background: #eab308; color: #000; }
         .btn-orange { background: #f97316; }
-        .btn-red { background: #ef4444; grid-column: span 2; font-size: 18px; box-shadow: 0 0 10px #ef4444; }
+        .btn-red { background: #ef4444; grid-column: span 2; font-size: 18px; box-shadow: 0 0 12px #ef4444; }
 
         /* COMMAND MONITOR VIEW */
-        .sidebar { width: 380px; background: #010a4a; border-right: 2px solid #00f0ff; display: flex; flex-direction: column; }
+        .sidebar { width: 390px; background: #010a4a; border-right: 2px solid #00f0ff; display: flex; flex-direction: column; }
         .panel-box { padding: 12px; border-bottom: 1px solid #00f0ff; }
         .input-row { display: flex; gap: 5px; margin-top: 5px; }
         .input-row input, .input-row select { background: #000; color: #fff; border: 1px solid #00f0ff; padding: 6px; border-radius: 4px; flex: 1; }
         
         .action-btn { background: #00f0ff; color: #000; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
         .intercom-btn { background: #f97316; color: #fff; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
+        .reset-all-btn { background: #ef4444; color: #fff; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
 
         .bus-list { flex: 1; overflow-y: auto; }
-        .bus-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .bus-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .bus-info { cursor: pointer; flex: 1; }
 
         .map-box { flex: 1; height: 100%; background: #000; position: relative; }
         #map { width: 100%; height: 100%; }
 
+        /* BADGES & BUTTONS */
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .badge-GREEN { background: #22c55e; color: #fff; }
         .badge-YELLOW { background: #eab308; color: #000; }
         .badge-ORANGE { background: #f97316; color: #fff; }
         .badge-RED { background: #ef4444; color: #fff; animation: blinker 0.8s linear infinite; }
 
+        .btn-bus-reset {
+            background: #38bdf8;
+            color: #000;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        .btn-bus-reset:hover { background: #00f0ff; }
+
+        /* ALERT BANNER ON MAP */
+        #emergency-alert-bar {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: #ef4444;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 0 15px #000;
+            display: none;
+            animation: blinker 0.8s linear infinite;
+        }
+
         @keyframes blinker {
-            50% { opacity: 0.2; }
+            50% { opacity: 0.3; }
         }
 
-        /* MAP FLASHING ANIMATION FOR EMERGENCY BUS */
-        .pulse-red-marker {
+        /* CUSTOM FLASHING CSS MARKER FOR MAP */
+        .flashing-red-icon {
+            background-color: #ef4444;
+            border: 3px solid #ffffff;
             border-radius: 50%;
-            background: rgba(239, 68, 68, 0.9);
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-            animation: pulse-red 1.2s infinite;
+            box-shadow: 0 0 15px #ef4444;
+            animation: pulse-red-ring 1s infinite;
         }
 
-        @keyframes pulse-red {
-            0% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8);
-            }
-            70% {
-                transform: scale(1.3);
-                box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
-            }
-            100% {
-                transform: scale(0.95);
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-            }
+        @keyframes pulse-red-ring {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.9); }
+            70% { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
     </style>
 </head>
@@ -156,7 +183,7 @@
             </div>
         </div>
 
-        <!-- SCHOOL COMMAND MONITOR VIEW (NO RESET CONTROLS) -->
+        <!-- SCHOOL COMMAND MONITOR VIEW -->
         <div id="command-view" class="view-panel hidden">
             <div class="sidebar">
                 <!-- BUS NUMBER ENTRY -->
@@ -181,11 +208,17 @@
                     <button class="intercom-btn" onclick="transmitToDriver()">🎙️ TRANSMIT TO DRIVER</button>
                 </div>
 
+                <!-- MASTER RESET BUTTON -->
+                <div class="panel-box">
+                    <button class="reset-all-btn" onclick="resetAllBuses()">🔄 CLEAR ALL FLEET ALERTS</button>
+                </div>
+
                 <div style="padding: 10px; font-weight: bold; color: #00f0ff;">Active Bus Fleet (20 Slots)</div>
                 <div class="bus-list" id="bus-list"></div>
             </div>
 
             <div class="map-box">
+                <div id="emergency-alert-bar">🚨 RED EMERGENCY ALERT ACTIVE ON FLEET MAP</div>
                 <div id="map"></div>
             </div>
         </div>
@@ -241,20 +274,43 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
             fleet.forEach(bus => {
-                let marker = L.circleMarker([bus.lat, bus.lng], {
+                createOrUpdateMarker(bus);
+            });
+
+            renderSidebarList();
+            setTimeout(() => { map.invalidateSize(); }, 200);
+        }
+
+        function createOrUpdateMarker(bus) {
+            if (busMarkers[bus.slot]) {
+                map.removeLayer(busMarkers[bus.slot]);
+            }
+
+            let marker;
+            let title = bus.id ? 'Bus #' + bus.id : 'Slot #' + bus.slot;
+
+            if (bus.status === 'RED') {
+                // Animated HTML DivIcon for Flashing Red Alert
+                let redIcon = L.divIcon({
+                    className: 'flashing-red-icon',
+                    iconSize: [22, 22],
+                    iconAnchor: [11, 11]
+                });
+                marker = L.marker([bus.lat, bus.lng], { icon: redIcon }).addTo(map);
+                marker.bindPopup(`<b style="color:red;">🚨 ${title} - EMERGENCY</b><br>Immediate Assistance Requested!`);
+            } else {
+                // Standard Circle Markers for Normal / Delays
+                marker = L.circleMarker([bus.lat, bus.lng], {
                     radius: 9,
                     fillColor: getColor(bus.status),
                     color: '#ffffff',
                     weight: 2,
                     fillOpacity: 0.95
                 }).addTo(map);
+                marker.bindPopup(`<b>${title}</b><br>Status: ${bus.status}`);
+            }
 
-                marker.bindPopup(`<b>${bus.id ? 'Bus #' + bus.id : 'Slot #' + bus.slot}</b><br>Status: ${bus.status}`);
-                busMarkers[bus.slot] = marker;
-            });
-
-            renderSidebarList();
-            setTimeout(() => { map.invalidateSize(); }, 200);
+            busMarkers[bus.slot] = marker;
         }
 
         function getColor(status) {
@@ -293,21 +349,18 @@
         }
 
         function updateMapDisplay() {
-            fleet.forEach(bus => {
-                if (busMarkers[bus.slot]) {
-                    busMarkers[bus.slot].setStyle({ 
-                        fillColor: getColor(bus.status),
-                        color: bus.status === 'RED' ? '#ff0000' : '#ffffff',
-                        weight: bus.status === 'RED' ? 4 : 2
-                    });
+            let hasRed = false;
 
-                    let popupText = `<b>${bus.id ? 'Bus #' + bus.id : 'Slot #' + bus.slot}</b><br>Status: ${bus.status}`;
-                    if (bus.status === 'RED') {
-                        popupText += `<br><span style="color:red;font-weight:bold;">🚨 EMERGENCY ALERT ACTIVE</span>`;
-                    }
-                    busMarkers[bus.slot].setPopupContent(popupText);
-                }
+            fleet.forEach(bus => {
+                createOrUpdateMarker(bus);
+                if (bus.status === 'RED') hasRed = true;
             });
+
+            const alertBar = document.getElementById('emergency-alert-bar');
+            if (alertBar) {
+                alertBar.style.display = hasRed ? 'block' : 'none';
+            }
+
             renderSidebarList();
         }
 
@@ -317,6 +370,8 @@
 
             if (status === 'RED') {
                 document.getElementById('driver-reply').innerText = "🚨 RED EMERGENCY ALERT BROADCASTED TO SCHOOL COMMAND!";
+            } else if (status === 'GREEN') {
+                document.getElementById('driver-reply').innerText = "Channel Ready";
             }
         }
 
@@ -357,14 +412,36 @@
             }, 4000);
         }
 
+        // RESET SPECIFIC BUS FROM SCHOOL SIDE
+        function resetBusStatus(slot) {
+            let bus = fleet.find(b => b.slot == slot);
+            if (bus) {
+                bus.status = 'GREEN';
+                if (slot == 1) {
+                    document.getElementById('driver-reply').innerText = "Channel Ready";
+                }
+                updateMapDisplay();
+            }
+        }
+
+        // MASTER RESET FOR ALL BUSES FROM SCHOOL SIDE
+        function resetAllBuses() {
+            fleet.forEach(b => b.status = 'GREEN');
+            document.getElementById('driver-reply').innerText = "Channel Ready";
+            updateMapDisplay();
+        }
+
         function renderSidebarList() {
             const list = document.getElementById('bus-list');
             if (!list) return;
 
             list.innerHTML = fleet.map(b => `
-                <div class="bus-item" onclick="focusOnBus(${b.slot})">
-                    <span>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</span>
-                    <span class="badge badge-${b.status}">${b.status === 'RED' ? '🚨 RED EMERGENCY' : b.status}</span>
+                <div class="bus-item">
+                    <div class="bus-info" onclick="focusOnBus(${b.slot})">
+                        <span>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</span>
+                        <span class="badge badge-${b.status}">${b.status === 'RED' ? '🚨 RED EMERGENCY' : b.status}</span>
+                    </div>
+                    <button class="btn-bus-reset" onclick="resetBusStatus(${b.slot})">RESET</button>
                 </div>
             `).join('');
         }
