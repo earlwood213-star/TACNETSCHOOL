@@ -106,6 +106,21 @@
             box-shadow: 0 0 10px #fbbf24;
         }
 
+        .btn-gps {
+            background: #00f0ff;
+            color: #020926;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 900;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
         .btn-save-setup {
             background: #fbbf24;
             color: #020926;
@@ -116,7 +131,7 @@
             font-weight: 900;
             cursor: pointer;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 15px;
             text-transform: uppercase;
             box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
         }
@@ -205,23 +220,28 @@
                         </div>
                         <div class="form-group">
                             <label>City / Town</label>
-                            <input type="text" id="cfg-city" placeholder="Type Any City or Town Name" autocomplete="off">
+                            <input type="text" id="cfg-city" placeholder="City or Town" autocomplete="off">
                         </div>
                         <div class="form-group">
                             <label>State & Zip Code</label>
-                            <input type="text" id="cfg-state-zip" placeholder="e.g. VA 24521" autocomplete="off">
+                            <input type="text" id="cfg-state-zip" placeholder="State & Zip" autocomplete="off">
+                        </div>
+
+                        <div class="form-group full-width" style="margin-top: 10px;">
+                            <label style="color: #fbbf24;">Map Coordinates (Lat / Lng)</label>
                         </div>
                         <div class="form-group">
-                            <label>Manual Latitude (Optional Override)</label>
-                            <input type="text" id="cfg-lat" placeholder="e.g. 37.3500" autocomplete="off">
+                            <label>Latitude</label>
+                            <input type="text" id="cfg-lat" placeholder="e.g. 38.8821" autocomplete="off">
                         </div>
                         <div class="form-group">
-                            <label>Manual Longitude (Optional Override)</label>
-                            <input type="text" id="cfg-lng" placeholder="e.g. -79.1500" autocomplete="off">
+                            <label>Longitude</label>
+                            <input type="text" id="cfg-lng" placeholder="e.g. -77.2754" autocomplete="off">
                         </div>
                     </div>
 
-                    <button type="button" class="btn-save-setup" id="btn-save" onclick="applySetup()">💾 SAVE LOCATION & LOAD MAP</button>
+                    <button type="button" class="btn-gps" onclick="fetchGPSLocation()">📍 DETECT & USE DEVICE GPS LOCATION</button>
+                    <button type="button" class="btn-save-setup" id="btn-save" onclick="applySetup()">💾 SAVE LOCATION & OPEN MAP</button>
                 </form>
             </div>
         </div>
@@ -288,21 +308,29 @@
             address: "",
             city: "",
             state_zip: "",
-            lat: 38.0000,
-            lng: -78.5000
+            lat: 38.8821,
+            lng: -77.2754
         };
 
         let map = null;
         let busMarkers = {};
         let fleet = [];
 
-        // Generates deterministic coordinates from text inputs when running locally without internet lookup
-        function textToCoordinateOffset(text) {
-            let hash = 0;
-            for (let i = 0; i < text.length; i++) {
-                hash = text.charCodeAt(i) + ((hash << 5) - hash);
+        function fetchGPSLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        document.getElementById('cfg-lat').value = position.coords.latitude.toFixed(6);
+                        document.getElementById('cfg-lng').value = position.coords.longitude.toFixed(6);
+                        alert("GPS Location acquired successfully!");
+                    },
+                    (error) => {
+                        alert("Could not retrieve GPS location automatically. Please enter Latitude and Longitude manually.");
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
             }
-            return (hash % 1000) / 10000;
         }
 
         function applySetup() {
@@ -318,14 +346,6 @@
             if (!isNaN(manualLat) && !isNaN(manualLng)) {
                 SCHOOL_CONFIG.lat = manualLat;
                 SCHOOL_CONFIG.lng = manualLng;
-            } else {
-                let textSeed = (SCHOOL_CONFIG.address + SCHOOL_CONFIG.city + SCHOOL_CONFIG.state_zip).toLowerCase();
-                let latOffset = textToCoordinateOffset(textSeed);
-                let lngOffset = textToCoordinateOffset(textSeed.split('').reverse().join(''));
-                
-                // Centers baseline in Virginia zone without locking to any town
-                SCHOOL_CONFIG.lat = 37.5000 + latOffset;
-                SCHOOL_CONFIG.lng = -78.8000 + lngOffset;
             }
 
             updateApp();
@@ -346,8 +366,8 @@
                     id: '',
                     driver: '',
                     status: 'GREEN',
-                    lat: SCHOOL_CONFIG.lat + (Math.random() - 0.5) * 0.02,
-                    lng: SCHOOL_CONFIG.lng + (Math.random() - 0.5) * 0.02
+                    lat: SCHOOL_CONFIG.lat + (Math.random() - 0.5) * 0.01,
+                    lng: SCHOOL_CONFIG.lng + (Math.random() - 0.5) * 0.01
                 });
             }
 
