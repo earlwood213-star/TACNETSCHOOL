@@ -105,7 +105,7 @@
             position: relative;
         }
 
-        /* BUS DRIVER UI (NO MAP) */
+        /* BUS DRIVER UI */
         #driver-view {
             display: flex;
             flex-direction: column;
@@ -151,7 +151,6 @@
             margin-top: 0.5rem;
         }
 
-        /* BUTTON VISUAL FEEDBACK */
         .status-btn {
             border: 2px solid transparent;
             border-radius: 12px;
@@ -174,7 +173,6 @@
             filter: brightness(1.3);
         }
 
-        /* ACTIVE BUTTON INDICATORS */
         .status-btn.active-green {
             opacity: 1.0;
             border-color: #ffffff;
@@ -227,11 +225,6 @@
             cursor: pointer;
             margin-top: 0.5rem;
             width: 100%;
-            transition: background 0.2s;
-        }
-
-        .reset-btn:active {
-            background: rgba(255, 255, 255, 0.4);
         }
 
         .reply-box {
@@ -261,7 +254,7 @@
             line-height: 1.2;
         }
 
-        /* SCHOOL MONITOR UI (20 BUSES LIVE MAP) */
+        /* SCHOOL MONITOR UI */
         #command-view {
             display: flex;
             width: 100%;
@@ -269,13 +262,58 @@
         }
 
         .sidebar {
-            width: 360px;
+            width: 380px;
             background: var(--panel-glass);
             backdrop-filter: blur(16px);
             border-right: 2px solid var(--panel-border);
             display: flex;
             flex-direction: column;
             z-index: 1000;
+        }
+
+        /* SCHOOL INPUT PANEL */
+        .config-box {
+            padding: 0.85rem;
+            border-bottom: 2px solid var(--panel-border);
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .config-title {
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: var(--neon-blue);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .config-inputs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .config-inputs select, .config-inputs input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--panel-border);
+            color: #fff;
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .config-inputs select { width: 35%; }
+        .config-inputs input { width: 65%; }
+
+        .config-btn {
+            background: var(--neon-blue);
+            color: #000;
+            border: none;
+            padding: 0.4rem;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+            width: 100%;
         }
 
         .bus-list {
@@ -306,7 +344,7 @@
             height: 100%;
         }
 
-        /* CUSTOM GPS DOT MARKERS */
+        /* GPS DOT MARKERS */
         .dot-circle {
             width: 18px;
             height: 18px;
@@ -362,16 +400,15 @@
     </header>
 
     <main>
-        <!-- BUS DRIVER VIEW (NO MAP) -->
+        <!-- BUS DRIVER VIEW -->
         <div id="driver-view">
-            <!-- DRIVER SAFETY REMINDER BANNER -->
             <div class="safety-banner">
                 <p>⚠️ WATCH YOUR SURROUNDINGS AND DRIVE SAFELY! 🛑</p>
             </div>
 
             <div class="glass-box">
-                <h2 style="color: var(--neon-blue);">Bus #20</h2>
-                <p>Route: Amherst North | Driver: <strong>John Doe</strong></p>
+                <h2 style="color: var(--neon-blue);" id="driver-bus-title">Bus #20</h2>
+                <p>Route: Amherst North | Driver: <strong id="driver-name-text">John Doe</strong></p>
             </div>
 
             <div class="glass-box">
@@ -404,7 +441,6 @@
                 </div>
                 <button class="reset-btn" onclick="resetDriverSystem()">🔄 Reset / Clear Status</button>
                 
-                <!-- CREDITS & LEGAL DISCLAIMER -->
                 <div class="credits-footer">
                     <strong>Created by Deputy Sheriff Retired Earl Wood, Virginia</strong><br>
                     <span style="color: var(--neon-blue); font-weight: bold;">PATENT PENDING</span>
@@ -415,11 +451,26 @@
             </div>
         </div>
 
-        <!-- SCHOOL COMMAND MONITOR (20 BUSES) -->
+        <!-- SCHOOL COMMAND MONITOR -->
         <div id="command-view" class="hidden">
             <div class="sidebar">
-                <div style="padding: 1rem; font-weight: bold; color: var(--neon-blue); border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    Active Bus Fleet (20 Online)
+                <!-- SCHOOL FLEET CONFIGURATOR -->
+                <div class="config-box">
+                    <div class="config-title">✏️ CUSTOMIZE DISTRICT BUS NUMBERS</div>
+                    <div class="config-inputs">
+                        <select id="select-bus-slot" onchange="loadBusConfigValues()">
+                            <!-- Generated via JS -->
+                        </select>
+                        <input type="text" id="input-bus-id" placeholder="Enter Bus # (e.g., 42B)">
+                    </div>
+                    <div class="config-inputs">
+                        <input type="text" id="input-bus-driver" placeholder="Enter Driver Name" style="width: 100%;">
+                    </div>
+                    <button class="config-btn" onclick="saveCustomBusNumber()">Save Vehicle Assignment</button>
+                </div>
+
+                <div style="padding: 0.75rem 1rem; font-weight: bold; color: var(--neon-blue); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
+                    Active Bus Fleet (<span id="fleet-count">20</span> Online)
                 </div>
                 <div class="bus-list" id="bus-list"></div>
                 <div class="credits-footer" style="padding: 0.75rem; background: rgba(0,0,0,0.2);">
@@ -442,14 +493,14 @@
         let map;
         let busMarkers = {};
         let fleetData = [];
-        let watchId = null;
 
-        // 20 Buses setup for Amherst County area
         const baseLat = 37.5854;
         const baseLng = -79.0514;
 
+        // Initialize 20 customizable bus slots
         for (let i = 1; i <= 20; i++) {
             fleetData.push({
+                slotIndex: i,
                 id: i === 20 ? '20' : (100 + i).toString(),
                 driver: i === 20 ? 'John Doe' : `Driver #${i}`,
                 route: `Route ${i}`,
@@ -462,25 +513,53 @@
         // CONTINUOUS ALWAYS-ON GPS BACKBONE
         function startContinuousGPS() {
             if ("geolocation" in navigator) {
-                watchId = navigator.geolocation.watchPosition(
+                navigator.geolocation.watchPosition(
                     (position) => {
-                        const bus20 = fleetData.find(b => b.id === '20');
-                        if (bus20) {
-                            bus20.lat = position.coords.latitude;
-                            bus20.lng = position.coords.longitude;
+                        const activeBus = fleetData[19]; // Slot 20 is driver view
+                        if (activeBus) {
+                            activeBus.lat = position.coords.latitude;
+                            activeBus.lng = position.coords.longitude;
                             updateFleetMap();
                         }
                     },
-                    (error) => {
-                        console.warn("GPS High-Precision Fallback Active (Simulating Movement)");
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        maximumAge: 0,
-                        timeout: 5000
-                    }
+                    (error) => console.warn("GPS High-Precision Fallback Active"),
+                    { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
                 );
             }
+        }
+
+        function populateBusSelectDropdown() {
+            const select = document.getElementById('select-bus-slot');
+            select.innerHTML = fleetData.map((bus, idx) => `
+                <option value="${idx}">Slot #${bus.slotIndex} (Bus ${bus.id})</option>
+            `).join('');
+            loadBusConfigValues();
+        }
+
+        function loadBusConfigValues() {
+            const idx = document.getElementById('select-bus-slot').value;
+            const bus = fleetData[idx];
+            document.getElementById('input-bus-id').value = bus.id;
+            document.getElementById('input-bus-driver').value = bus.driver;
+        }
+
+        function saveCustomBusNumber() {
+            const idx = document.getElementById('select-bus-slot').value;
+            const newId = document.getElementById('input-bus-id').value.trim() || `Bus #${parseInt(idx)+1}`;
+            const newDriver = document.getElementById('input-bus-driver').value.trim() || `Driver #${parseInt(idx)+1}`;
+
+            fleetData[idx].id = newId;
+            fleetData[idx].driver = newDriver;
+
+            // Update driver UI if Slot 20 was modified
+            if (idx == 19) {
+                document.getElementById('driver-bus-title').innerText = `Bus #${newId}`;
+                document.getElementById('driver-name-text').innerText = newDriver;
+            }
+
+            populateBusSelectDropdown();
+            document.getElementById('select-bus-slot').value = idx;
+            updateFleetMap();
         }
 
         function switchView(view) {
@@ -508,7 +587,6 @@
         function initMap() {
             map = L.map('map').setView([baseLat, baseLng], 12);
             
-            // 100% FREE OpenStreetMap Tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap contributors'
@@ -516,8 +594,6 @@
 
             renderFleetOnMap();
             renderSidebar();
-
-            // Continuous background update loop
             setInterval(simulateMovement, 3000);
         }
 
@@ -534,11 +610,10 @@
             fleetData.forEach(bus => {
                 const marker = L.marker([bus.lat, bus.lng], { icon: getDotIcon(bus.status) }).addTo(map);
                 marker.bindPopup(getPopupContent(bus));
-                busMarkers[bus.id] = marker;
+                busMarkers[bus.slotIndex] = marker;
             });
         }
 
-        // DYNAMIC POPUP GENERATOR (STATUS COLOR FIX)
         function getPopupContent(bus) {
             let colorHex = "#22c55e";
             if (bus.status === "YELLOW") colorHex = "#eab308";
@@ -558,19 +633,18 @@
 
         function updateFleetMap() {
             fleetData.forEach(bus => {
-                if (busMarkers[bus.id]) {
-                    busMarkers[bus.id].setLatLng([bus.lat, bus.lng]);
-                    busMarkers[bus.id].setIcon(getDotIcon(bus.status));
-                    busMarkers[bus.id].setPopupContent(getPopupContent(bus));
+                if (busMarkers[bus.slotIndex]) {
+                    busMarkers[bus.slotIndex].setLatLng([bus.lat, bus.lng]);
+                    busMarkers[bus.slotIndex].setIcon(getDotIcon(bus.status));
+                    busMarkers[bus.slotIndex].setPopupContent(getPopupContent(bus));
                 }
             });
             renderSidebar();
         }
 
         function simulateMovement() {
-            fleetData.forEach(bus => {
-                // Simulate active movement for fleet buses
-                if (bus.id !== '20' || !navigator.geolocation) {
+            fleetData.forEach((bus, i) => {
+                if (i !== 19 || !navigator.geolocation) {
                     bus.lat += (Math.random() - 0.5) * 0.001;
                     bus.lng += (Math.random() - 0.5) * 0.001;
                 }
@@ -578,26 +652,20 @@
             updateFleetMap();
         }
 
-        // UPDATE DRIVER BUTTON HIGHLIGHTS
         function setButtonActiveState(status) {
-            const statuses = ['GREEN', 'YELLOW', 'ORANGE', 'RED'];
-            statuses.forEach(s => {
+            ['GREEN', 'YELLOW', 'ORANGE', 'RED'].forEach(s => {
                 const btn = document.getElementById(`btn-${s}`);
-                if (btn) {
-                    btn.classList.remove('active-green', 'active-yellow', 'active-orange', 'active-red');
-                }
+                if (btn) btn.classList.remove('active-green', 'active-yellow', 'active-orange', 'active-red');
             });
 
             const activeBtn = document.getElementById(`btn-${status}`);
-            if (activeBtn) {
-                activeBtn.classList.add(`active-${status.toLowerCase()}`);
-            }
+            if (activeBtn) activeBtn.classList.add(`active-${status.toLowerCase()}`);
         }
 
         function updateDriverStatus(status) {
-            const bus20 = fleetData.find(b => b.id === '20');
-            if (bus20) {
-                bus20.status = status;
+            const activeBus = fleetData[19];
+            if (activeBus) {
+                activeBus.status = status;
                 if (status !== 'RED') {
                     document.getElementById('alert-banner').style.display = 'none';
                 }
@@ -613,17 +681,14 @@
 
         function stopPTT() {
             document.getElementById('driver-reply-box').innerText = "Office Reply: \"Copy that, John.\"";
-            
-            // Auto-reset back to GREEN after 5 seconds
-            setTimeout(() => {
-                resetDriverSystem();
-            }, 5000);
+            setTimeout(() => { resetDriverSystem(); }, 5000);
         }
 
         function triggerEmergency() {
             updateDriverStatus('RED');
+            const activeBus = fleetData[19];
             document.getElementById('alert-banner').style.display = 'flex';
-            document.getElementById('alert-text').innerText = "🚨 RED EMERGENCY: BUS #20 (JOHN DOE)";
+            document.getElementById('alert-text').innerText = `🚨 RED EMERGENCY: BUS #${activeBus.id} (${activeBus.driver.toUpperCase()})`;
         }
 
         function acknowledgeAlert() {
@@ -641,7 +706,7 @@
             if (!listContainer) return;
 
             listContainer.innerHTML = fleetData.map(bus => `
-                <div class="bus-card" onclick="focusBus('${bus.id}')">
+                <div class="bus-card" onclick="focusBus('${bus.slotIndex}')">
                     <div style="display:flex; justify-content:space-between;">
                         <strong>Bus #${bus.id}</strong>
                         <span class="badge" style="background:var(--status-${bus.status.toLowerCase()}); color:${bus.status==='YELLOW'?'#000':'#fff'};">${bus.status}</span>
@@ -651,16 +716,16 @@
             `).join('');
         }
 
-        function focusBus(id) {
-            const bus = fleetData.find(b => b.id === id);
+        function focusBus(slotIndex) {
+            const bus = fleetData.find(b => b.slotIndex == slotIndex);
             if (bus && map) {
                 map.setView([bus.lat, bus.lng], 15);
-                busMarkers[id].openPopup();
+                busMarkers[slotIndex].openPopup();
             }
         }
 
-        // Launch continuous background GPS on load
         window.onload = () => {
+            populateBusSelectDropdown();
             startContinuousGPS();
         };
     </script>
