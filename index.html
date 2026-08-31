@@ -3,130 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACNET School - Live GPS & Intercom Safety Platform</title>
+    <title>TACNET SCHOOL - Driver & Command Platform</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        body { background: #021078; color: #ffffff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         
-        /* RESTORED BRANDING HEADER & BANNER */
-        header { 
-            background: #010a4a; 
-            padding: 8px 15px; 
+        /* DEEP BLUE BACKGROUND WITH GLOW EFFECT */
+        body { 
+            background: radial-gradient(circle at center, #071c52 0%, #020926 100%); 
+            color: #ffffff; 
+            height: 100vh; 
             display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 2px solid #00f0ff; 
-            min-height: 65px;
-        }
-        .brand-box { display: flex; flex-direction: column; }
-        .title { font-size: 20px; font-weight: bold; color: #00f0ff; letter-spacing: 1px; }
-        .creator-tag { font-size: 11px; color: #a5f3fc; margin-top: 2px; }
-        .patent-tag { font-size: 10px; color: #94a3b8; font-style: italic; }
-
-        .safety-banner {
-            background: #eab308;
-            color: #000;
-            font-weight: bold;
-            font-size: 13px;
-            padding: 6px 14px;
-            border-radius: 4px;
-            text-align: center;
-            letter-spacing: 0.5px;
-            box-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
+            flex-direction: column; 
+            overflow: hidden; 
         }
 
-        .nav-group { display: flex; gap: 8px; }
+        /* NAVIGATION CONTROL BAR */
+        .view-switcher {
+            background: rgba(1, 10, 42, 0.9);
+            border-bottom: 2px solid #00f0ff;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            z-index: 100;
+        }
+
         .nav-btn { 
-            background: #0a32a0; 
-            color: #fff; 
-            border: 1px solid #00f0ff; 
-            padding: 8px 14px; 
-            border-radius: 6px; 
-            font-weight: bold; 
+            background: rgba(10, 50, 160, 0.7); 
+            color: #ffffff; 
+            border: 2px solid #00f0ff; 
+            padding: 10px 22px; 
+            border-radius: 8px; 
+            font-size: 16px;
+            font-weight: 800; 
             cursor: pointer; 
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
         }
-        .nav-btn.active { background: #00f0ff; color: #000; }
+        .nav-btn.active { 
+            background: #00f0ff; 
+            color: #020926; 
+            box-shadow: 0 0 15px #00f0ff;
+        }
 
-        #container { display: flex; flex: 1; height: calc(100vh - 65px); position: relative; }
-        
-        /* VIEWS */
+        #main-container { flex: 1; position: relative; overflow: hidden; }
         .view-panel { width: 100%; height: 100%; display: flex; }
         .hidden { display: none !important; }
 
-        /* DRIVER VIEW */
-        #driver-view { max-width: 500px; margin: auto; flex-direction: column; gap: 15px; padding: 20px; }
-        .card { background: rgba(10, 50, 160, 0.6); border: 2px solid #00f0ff; border-radius: 12px; padding: 15px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        
-        .btn-status { 
-            padding: 15px; border-radius: 8px; border: none; font-weight: bold; color: white; cursor: pointer; text-align: center; 
+        /* ========================================================= */
+        /* HOME / DRIVER VIEW - LARGE GLASS CARDS & PROMINENT HEADER */
+        /* ========================================================= */
+        #driver-view { 
+            flex-direction: column; 
+            align-items: center;
+            padding: 25px; 
+            overflow-y: auto; 
+            gap: 20px;
         }
-        .btn-green { background: #22c55e; }
-        .btn-yellow { background: #eab308; color: #000; }
-        .btn-orange { background: #f97316; }
-        .btn-red { background: #ef4444; grid-column: span 2; font-size: 18px; box-shadow: 0 0 12px #ef4444; }
 
-        /* COMMAND MONITOR VIEW */
-        .sidebar { width: 390px; background: #010a4a; border-right: 2px solid #00f0ff; display: flex; flex-direction: column; }
-        .panel-box { padding: 12px; border-bottom: 1px solid #00f0ff; }
-        .input-row { display: flex; gap: 5px; margin-top: 5px; }
-        .input-row input, .input-row select { background: #000; color: #fff; border: 1px solid #00f0ff; padding: 6px; border-radius: 4px; flex: 1; }
+        /* GLASSMORPHISM CARD LAYER */
+        .glass-card {
+            width: 100%;
+            max-width: 750px;
+            background: rgba(0, 120, 255, 0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid rgba(0, 240, 255, 0.5);
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 8px 32px 0 rgba(0, 240, 255, 0.18), inset 0 0 15px rgba(0, 240, 255, 0.1);
+        }
+
+        /* BRANDING HEADER - DRIVER HOME PAGE */
+        .driver-header {
+            text-align: center;
+            border-bottom: 2px solid rgba(0, 240, 255, 0.3);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .main-title { 
+            font-size: 42px; 
+            font-weight: 900; 
+            color: #00f0ff; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.8);
+        }
+        .creator-text { 
+            font-size: 20px; 
+            font-weight: 700;
+            color: #7dd3fc; 
+            margin-top: 4px;
+        }
+        .patent-text { 
+            font-size: 15px; 
+            color: #94a3b8; 
+            font-style: italic; 
+            margin-top: 4px;
+        }
+
+        /* DRIVER SAFETY WARNING BANNER */
+        .safety-banner-large {
+            background: #eab308;
+            color: #000000;
+            font-size: 22px;
+            font-weight: 900;
+            padding: 14px 20px;
+            border-radius: 12px;
+            text-align: center;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.6);
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        /* DRIVER ASSIGNED SLOT DISPLAY */
+        .bus-status-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: #00f0ff;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+        .bus-status-sub {
+            font-size: 20px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        /* DRIVER BUTTON GRID */
+        .grid-buttons { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 16px; 
+            margin-top: 15px; 
+        }
+
+        .btn-large { 
+            padding: 22px; 
+            border-radius: 14px; 
+            border: 2px solid #ffffff; 
+            font-size: 24px; 
+            font-weight: 900; 
+            color: #ffffff; 
+            cursor: pointer; 
+            text-align: center; 
+            text-transform: uppercase;
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+        }
+        .btn-large:active { transform: scale(0.97); }
+
+        .btn-green { background: #16a34a; box-shadow: 0 0 15px rgba(22, 163, 74, 0.5); }
+        .btn-yellow { background: #ca8a04; color: #ffffff; box-shadow: 0 0 15px rgba(202, 138, 4, 0.5); }
+        .btn-orange { background: #ea580c; box-shadow: 0 0 15px rgba(234, 88, 12, 0.5); }
+        .btn-red { 
+            background: #dc2626; 
+            grid-column: span 2; 
+            font-size: 32px; 
+            padding: 28px;
+            box-shadow: 0 0 25px #dc2626; 
+            animation: pulse-red-btn 1.2s infinite;
+        }
+
+        @keyframes pulse-red-btn {
+            0% { box-shadow: 0 0 15px #dc2626; }
+            50% { box-shadow: 0 0 35px #dc2626; }
+            100% { box-shadow: 0 0 15px #dc2626; }
+        }
+
+        .feed-display {
+            font-size: 22px;
+            font-weight: 800;
+            color: #00f0ff;
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 240, 255, 0.4);
+        }
+
+        /* ========================================================= */
+        /* SCHOOL COMMAND MONITOR VIEW */
+        /* ========================================================= */
+        .sidebar { 
+            width: 420px; 
+            background: rgba(2, 9, 38, 0.95); 
+            border-right: 2px solid #00f0ff; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 15px;
+            gap: 15px;
+        }
+
+        .panel-glass {
+            background: rgba(0, 120, 255, 0.1);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .input-row { display: flex; gap: 8px; margin-top: 8px; }
+        .input-row input, .input-row select { 
+            background: #000; 
+            color: #fff; 
+            border: 1px solid #00f0ff; 
+            padding: 10px; 
+            border-radius: 6px; 
+            font-size: 16px;
+            flex: 1; 
+        }
+
+        .action-btn { 
+            background: #00f0ff; 
+            color: #020926; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-size: 16px;
+            font-weight: 800; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-top: 8px; 
+        }
+
+        .intercom-btn { 
+            background: #f97316; 
+            color: #ffffff; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-size: 16px;
+            font-weight: 800; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-top: 8px; 
+        }
+
+        .reset-all-btn { 
+            background: #ef4444; 
+            color: #ffffff; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-size: 16px;
+            font-weight: 800; 
+            cursor: pointer; 
+            width: 100%; 
+        }
+
+        .bus-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .bus-item { 
+            background: rgba(255,255,255,0.05); 
+            padding: 12px; 
+            border-radius: 8px;
+            border-left: 4px solid #00f0ff;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
         
-        .action-btn { background: #00f0ff; color: #000; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
-        .intercom-btn { background: #f97316; color: #fff; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
-        .reset-all-btn { background: #ef4444; color: #fff; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
-
-        .bus-list { flex: 1; overflow-y: auto; }
-        .bus-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
-        .bus-info { cursor: pointer; flex: 1; }
-
-        .map-box { flex: 1; height: 100%; background: #000; position: relative; }
-        #map { width: 100%; height: 100%; }
-
-        /* BADGES & BUTTONS */
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge { padding: 6px 10px; border-radius: 6px; font-size: 14px; font-weight: 800; }
         .badge-GREEN { background: #22c55e; color: #fff; }
         .badge-YELLOW { background: #eab308; color: #000; }
         .badge-ORANGE { background: #f97316; color: #fff; }
-        .badge-RED { background: #ef4444; color: #fff; animation: blinker 0.8s linear infinite; }
+        .badge-RED { background: #ef4444; color: #fff; animation: blinker 0.8s infinite; }
 
         .btn-bus-reset {
             background: #38bdf8;
             color: #000;
             border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 800;
             cursor: pointer;
-            margin-left: 8px;
         }
-        .btn-bus-reset:hover { background: #00f0ff; }
 
-        /* ALERT BANNER ON MAP */
+        .map-box { flex: 1; height: 100%; background: #000; position: relative; }
+        #map { width: 100%; height: 100%; }
+
         #emergency-alert-bar {
             position: absolute;
-            top: 10px;
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
             background: #ef4444;
             color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0 0 15px #000;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 20px;
+            box-shadow: 0 0 20px #000;
             display: none;
-            animation: blinker 0.8s linear infinite;
+            animation: blinker 0.8s infinite;
         }
 
-        @keyframes blinker {
-            50% { opacity: 0.3; }
-        }
+        @keyframes blinker { 50% { opacity: 0.3; } }
 
-        /* CUSTOM FLASHING CSS MARKER FOR MAP */
         .flashing-red-icon {
             background-color: #ef4444;
             border: 3px solid #ffffff;
@@ -137,58 +312,69 @@
 
         @keyframes pulse-red-ring {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.9); }
-            70% { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
+            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="brand-box">
-            <div class="title">TACNET SCHOOL</div>
-            <div class="creator-tag">Creator: Earl A. Wood</div>
-            <div class="patent-tag">Patent Pending & Disclaimer: Proprietary Safety System</div>
-        </div>
+    <!-- TOP CONTROL NAVIGATION SWITCHER -->
+    <div class="view-switcher">
+        <button id="tab-driver" class="nav-btn active" onclick="showView('driver')">🏠 MAIN DRIVER UI</button>
+        <button id="tab-command" class="nav-btn" onclick="showView('command')">🖥️ SCHOOL MONITOR VIEW</button>
+    </div>
 
-        <div class="safety-banner">
-            ⚠️ WATCH YOUR SURROUNDINGS AND DRIVE SAFELY
-        </div>
-
-        <div class="nav-group">
-            <button id="tab-driver" class="nav-btn active" onclick="showView('driver')">Bus Driver View</button>
-            <button id="tab-command" class="nav-btn" onclick="showView('command')">School Main Monitor</button>
-        </div>
-    </header>
-
-    <div id="container">
-        <!-- BUS DRIVER VIEW -->
+    <div id="main-container">
+        
+        <!-- ========================================================= -->
+        <!-- HOME / DRIVER VIEW (COMPLETE BRANDING & LARGE TEXT) -->
+        <!-- ========================================================= -->
         <div id="driver-view" class="view-panel">
-            <div class="card">
-                <h2 id="driver-bus-title" style="color: #00f0ff;">Slot #1 (Unassigned)</h2>
-                <p>Status: Active GPS Beacon</p>
-            </div>
-            <div class="card">
-                <p><b>BEACON STATUS CONTROLS</b></p>
-                <div class="grid">
-                    <button class="btn-status btn-green" onclick="setDriverStatus('GREEN')">GREEN<br><small>Normal</small></button>
-                    <button class="btn-status btn-yellow" onclick="setDriverStatus('YELLOW')">YELLOW<br><small>Delay</small></button>
-                    <button class="btn-status btn-orange" onmousedown="holdOrange()" onmouseup="releaseOrange()">🎙️ ORANGE<br><small>Hold to Talk</small></button>
-                    <button class="btn-status btn-red" onclick="setDriverStatus('RED')">🚨 RED EMERGENCY</button>
+            
+            <!-- BRANDING & LEGAL GLASS CARD -->
+            <div class="glass-card">
+                <div class="driver-header">
+                    <div class="main-title">TACNET SCHOOL</div>
+                    <div class="creator-text">Creator: Earl A. Wood</div>
+                    <div class="patent-text">Patent Pending & Legal Disclaimer: Proprietary Safety System</div>
+                </div>
+
+                <div class="safety-banner-large">
+                    ⚠️ WATCH YOUR SURROUNDINGS AND DRIVE SAFELY
                 </div>
             </div>
-            <div class="card">
-                <p><b>Dispatch Feed:</b></p>
-                <div id="driver-reply" style="color: #00f0ff; margin-top: 5px; font-weight: bold;">"Channel Ready"</div>
+
+            <!-- DRIVER STATUS & BEACON CONTROLS CARD -->
+            <div class="glass-card">
+                <div class="bus-status-title" id="driver-bus-title">Slot #1 (Unassigned)</div>
+                <div class="bus-status-sub">Status: Active GPS Beacon</div>
+
+                <div class="grid-buttons">
+                    <button class="btn-large btn-green" onclick="setDriverStatus('GREEN')">GREEN<br><small style="font-size:14px;">Normal Operation</small></button>
+                    <button class="btn-large btn-yellow" onclick="setDriverStatus('YELLOW')">YELLOW<br><small style="font-size:14px;">Schedule Delay</small></button>
+                    <button class="btn-large btn-orange" onmousedown="holdOrange()" onmouseup="releaseOrange()">🎙️ ORANGE<br><small style="font-size:14px;">Hold to Talk</small></button>
+                    <button class="btn-large btn-red" onclick="setDriverStatus('RED')">🚨 RED EMERGENCY</button>
+                </div>
             </div>
+
+            <!-- DISPATCH FEED DISPLAY CARD -->
+            <div class="glass-card">
+                <div style="font-size: 18px; font-weight: 700; color: #94a3b8;">DISPATCH INTERCOM FEED:</div>
+                <div id="driver-reply" class="feed-display">"Channel Ready"</div>
+            </div>
+
         </div>
 
+        <!-- ========================================================= -->
         <!-- SCHOOL COMMAND MONITOR VIEW -->
+        <!-- ========================================================= -->
         <div id="command-view" class="view-panel hidden">
             <div class="sidebar">
+                
                 <!-- BUS NUMBER ENTRY -->
-                <div class="panel-box">
-                    <p style="color: #00f0ff; font-weight: bold;">✏️ ASSIGN BUS NUMBERS</p>
+                <div class="panel-glass">
+                    <p style="color: #00f0ff; font-weight: bold; font-size: 16px;">✏️ ASSIGN BUS NUMBERS</p>
                     <div class="input-row">
                         <select id="select-slot" onchange="loadSlotData()"></select>
                         <input type="text" id="input-bus-num" placeholder="Bus # (e.g. 104)">
@@ -197,8 +383,8 @@
                 </div>
 
                 <!-- DISPATCH TALK BACK -->
-                <div class="panel-box" style="background: rgba(249, 115, 22, 0.15);">
-                    <p style="color: #f97316; font-weight: bold;">🎙️ DISPATCH TALK BACK (ORANGE)</p>
+                <div class="panel-glass" style="background: rgba(249, 115, 22, 0.15);">
+                    <p style="color: #f97316; font-weight: bold; font-size: 16px;">🎙️ DISPATCH TALK BACK (ORANGE)</p>
                     <div class="input-row">
                         <select id="select-talk-slot"></select>
                     </div>
@@ -209,11 +395,11 @@
                 </div>
 
                 <!-- MASTER RESET BUTTON -->
-                <div class="panel-box">
+                <div class="panel-glass">
                     <button class="reset-all-btn" onclick="resetAllBuses()">🔄 CLEAR ALL FLEET ALERTS</button>
                 </div>
 
-                <div style="padding: 10px; font-weight: bold; color: #00f0ff;">Active Bus Fleet (20 Slots)</div>
+                <div style="font-size: 18px; font-weight: bold; color: #00f0ff;">Active Bus Fleet (20 Slots)</div>
                 <div class="bus-list" id="bus-list"></div>
             </div>
 
@@ -222,6 +408,7 @@
                 <div id="map"></div>
             </div>
         </div>
+
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -233,7 +420,7 @@
         const baseLat = 37.5815;
         const baseLng = -79.0506;
 
-        // Populate 20 slots
+        // Initialize 20 Fleet Slots
         for (let i = 1; i <= 20; i++) {
             fleet.push({
                 slot: i,
@@ -292,14 +479,14 @@
             if (bus.status === 'RED') {
                 let redIcon = L.divIcon({
                     className: 'flashing-red-icon',
-                    iconSize: [22, 22],
-                    iconAnchor: [11, 11]
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
                 });
                 marker = L.marker([bus.lat, bus.lng], { icon: redIcon }).addTo(map);
-                marker.bindPopup(`<b style="color:red;">🚨 ${title} - EMERGENCY</b><br>Immediate Assistance Requested!`);
+                marker.bindPopup(`<b style="color:red; font-size:16px;">🚨 ${title} - EMERGENCY</b><br>Immediate Assistance Requested!`);
             } else {
                 marker = L.circleMarker([bus.lat, bus.lng], {
-                    radius: 9,
+                    radius: 10,
                     fillColor: getColor(bus.status),
                     color: '#ffffff',
                     weight: 2,
@@ -312,10 +499,10 @@
         }
 
         function getColor(status) {
-            if (status === 'YELLOW') return '#eab308';
-            if (status === 'ORANGE') return '#f97316';
-            if (status === 'RED') return '#ef4444';
-            return '#22c55e';
+            if (status === 'YELLOW') return '#ca8a04';
+            if (status === 'ORANGE') return '#ea580c';
+            if (status === 'RED') return '#dc2626';
+            return '#16a34a';
         }
 
         function renderDropdowns() {
@@ -433,8 +620,8 @@
 
             list.innerHTML = fleet.map(b => `
                 <div class="bus-item">
-                    <div class="bus-info" onclick="focusOnBus(${b.slot})">
-                        <span>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</span>
+                    <div style="cursor:pointer;" onclick="focusOnBus(${b.slot})">
+                        <div style="font-size:16px; font-weight:800;">${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</div>
                         <span class="badge badge-${b.status}">${b.status === 'RED' ? '🚨 RED EMERGENCY' : b.status}</span>
                     </div>
                     <button class="btn-bus-reset" onclick="resetBusStatus(${b.slot})">RESET</button>
