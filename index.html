@@ -232,17 +232,34 @@
             flex: 1; 
         }
 
+        .btn-group-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
         .action-btn { 
             background: #00f0ff; 
             color: #020926; 
             border: none; 
             padding: 12px; 
             border-radius: 8px; 
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 800; 
             cursor: pointer; 
-            width: 100%; 
-            margin-top: 8px; 
+            flex: 2; 
+        }
+
+        .erase-btn {
+            background: #ef4444;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            flex: 1;
         }
 
         .intercom-btn { 
@@ -272,7 +289,7 @@
         }
 
         .reset-all-btn { 
-            background: #ef4444; 
+            background: #ea580c; 
             color: #ffffff; 
             border: none; 
             padding: 12px; 
@@ -305,7 +322,7 @@
             background: #38bdf8;
             color: #000;
             border: none;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
             font-size: 13px;
             font-weight: 800;
@@ -480,7 +497,7 @@
             <div class="sidebar">
                 
                 <div class="panel-glass">
-                    <p style="color: #00f0ff; font-weight: bold; font-size: 16px;">✏️ ASSIGN BUS & DRIVER INFO</p>
+                    <p style="color: #00f0ff; font-weight: bold; font-size: 16px;">✏️ ASSIGN OR CLEAR BUS & DRIVER</p>
                     <div class="input-row">
                         <select id="select-slot" onchange="loadSlotData()"></select>
                     </div>
@@ -488,7 +505,10 @@
                         <input type="text" id="input-bus-num" placeholder="Bus # (e.g. 133)">
                         <input type="text" id="input-driver-name" placeholder="Driver Name">
                     </div>
-                    <button class="action-btn" onclick="saveSlotData()">Save Bus & Driver Info</button>
+                    <div class="btn-group-row">
+                        <button class="action-btn" onclick="saveSlotData()">💾 Save Info</button>
+                        <button class="erase-btn" onclick="clearSlotData()">🗑️ Erase Info</button>
+                    </div>
                 </div>
 
                 <div class="panel-glass" style="background: rgba(249, 115, 22, 0.15);">
@@ -731,6 +751,27 @@
 
             currentActiveDriverSlot = idx;
             logEvent(fleet[idx].slot, 'ASSIGNMENT', `Assigned Bus #${fleet[idx].id} to Driver ${fleet[idx].driver}`);
+
+            updateDriverUIDisplay();
+            updateMapDisplay();
+        }
+
+        function clearSlotData() {
+            let idx = parseInt(document.getElementById('select-slot').value);
+            let oldBus = fleet[idx].id;
+            let oldDriver = fleet[idx].driver;
+
+            fleet[idx].id = '';
+            fleet[idx].driver = '';
+            document.getElementById('input-bus-num').value = '';
+            document.getElementById('input-driver-name').value = '';
+
+            renderDropdowns();
+            document.getElementById('select-slot').value = idx;
+            document.getElementById('select-talk-slot').value = idx;
+            document.getElementById('select-active-driver-slot').value = idx;
+
+            logEvent(fleet[idx].slot, 'UNASSIGNED', `Cleared Bus #${oldBus || 'N/A'} and Driver ${oldDriver || 'N/A'}`);
 
             updateDriverUIDisplay();
             updateMapDisplay();
