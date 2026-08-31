@@ -112,15 +112,15 @@
         }
 
         .bus-status-title {
-            font-size: 30px;
-            font-weight: 800;
+            font-size: 32px;
+            font-weight: 900;
             color: #00f0ff;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
         }
         .bus-status-sub {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 22px;
+            font-weight: 700;
             color: #e2e8f0;
         }
 
@@ -172,6 +172,18 @@
             padding: 14px;
             border-radius: 10px;
             border: 1px solid rgba(0, 240, 255, 0.4);
+        }
+
+        .select-driver-slot {
+            background: #000;
+            color: #00f0ff;
+            border: 2px solid #00f0ff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin-bottom: 12px;
         }
 
         /* SCHOOL COMMAND MONITOR VIEW */
@@ -331,6 +343,9 @@
             </div>
 
             <div class="glass-card">
+                <p style="color: #00f0ff; font-size: 14px; font-weight: bold; margin-bottom: 6px;">SELECT CURRENT ACTIVE DRIVER UNIT:</p>
+                <select id="select-active-driver-slot" class="select-driver-slot" onchange="changeActiveDriverSlot()"></select>
+
                 <div class="bus-status-title" id="driver-bus-title">Slot #1 (Unassigned)</div>
                 <div class="bus-status-sub" id="driver-name-sub">Driver: Unassigned</div>
 
@@ -400,7 +415,7 @@
         let map = null;
         let busMarkers = {};
         let fleet = [];
-        let currentActiveDriverSlot = 0; // Tracks which slot the Driver UI is tied to
+        let currentActiveDriverSlot = 0; // Index 0-19
 
         const baseLat = 37.5815;
         const baseLng = -79.0506;
@@ -458,7 +473,7 @@
         function getBusTitle(bus) {
             let label = bus.id ? `Bus #${bus.id}` : `Slot #${bus.slot}`;
             if (bus.driver) {
-                label += ` (${bus.driver})`;
+                label += ` - ${bus.driver}`;
             }
             return label;
         }
@@ -503,10 +518,22 @@
         function renderDropdowns() {
             const selSlot = document.getElementById('select-slot');
             const selTalk = document.getElementById('select-talk-slot');
+            const selDriverSlot = document.getElementById('select-active-driver-slot');
 
-            let html = fleet.map(b => `<option value="${b.slot - 1}">${getBusTitle(b)}</option>`).join('');
+            let html = fleet.map((b, idx) => `<option value="${idx}">${getBusTitle(b)}</option>`).join('');
+            
             selSlot.innerHTML = html;
             selTalk.innerHTML = html;
+            selDriverSlot.innerHTML = html;
+
+            selSlot.value = currentActiveDriverSlot;
+            selTalk.value = currentActiveDriverSlot;
+            selDriverSlot.value = currentActiveDriverSlot;
+        }
+
+        function changeActiveDriverSlot() {
+            currentActiveDriverSlot = parseInt(document.getElementById('select-active-driver-slot').value);
+            updateDriverUIDisplay();
         }
 
         function loadSlotData() {
@@ -516,13 +543,16 @@
         }
 
         function saveSlotData() {
-            let idx = document.getElementById('select-slot').value;
+            let idx = parseInt(document.getElementById('select-slot').value);
             fleet[idx].id = document.getElementById('input-bus-num').value.trim();
             fleet[idx].driver = document.getElementById('input-driver-name').value.trim();
 
             renderDropdowns();
             document.getElementById('select-slot').value = idx;
             document.getElementById('select-talk-slot').value = idx;
+            document.getElementById('select-active-driver-slot').value = idx;
+
+            currentActiveDriverSlot = idx;
             
             updateDriverUIDisplay();
             updateMapDisplay();
@@ -588,7 +618,7 @@
         }
 
         function transmitToDriver() {
-            let idx = document.getElementById('select-talk-slot').value;
+            let idx = parseInt(document.getElementById('select-talk-slot').value);
             let msg = document.getElementById('input-msg').value;
 
             let targetBus = fleet[idx];
