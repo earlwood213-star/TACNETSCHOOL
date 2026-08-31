@@ -91,10 +91,18 @@
             margin-top: 4px;
         }
         .patent-text { 
-            font-size: 15px; 
-            color: #94a3b8; 
-            font-style: italic; 
+            font-size: 14px; 
+            color: #fbbf24; 
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-top: 6px;
+        }
+        .disclaimer-text {
+            font-size: 13px;
+            color: #94a3b8;
+            font-style: italic;
             margin-top: 4px;
+            line-height: 1.3;
         }
 
         .safety-banner-large {
@@ -142,25 +150,34 @@
             text-align: center; 
             text-transform: uppercase;
             transition: transform 0.1s ease, box-shadow 0.2s ease;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .btn-large:active { transform: scale(0.97); }
 
         .btn-green { background: #16a34a; box-shadow: 0 0 15px rgba(22, 163, 74, 0.5); }
         .btn-yellow { background: #ca8a04; color: #ffffff; box-shadow: 0 0 15px rgba(202, 138, 4, 0.5); }
         .btn-orange { background: #ea580c; box-shadow: 0 0 15px rgba(234, 88, 12, 0.5); }
+        
         .btn-red { 
-            background: #dc2626; 
+            background: #991b1b; 
             grid-column: span 2; 
-            font-size: 32px; 
-            padding: 28px;
-            box-shadow: 0 0 25px #dc2626; 
-            animation: pulse-red-btn 1.2s infinite;
+            font-size: 26px; 
+            padding: 26px;
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
+            border: 3px solid #f87171;
+            position: relative;
+        }
+
+        .btn-red.active-emergency {
+            background: #dc2626 !important;
+            box-shadow: 0 0 35px #dc2626 !important;
+            animation: pulse-red-btn 0.8s infinite alternate;
         }
 
         @keyframes pulse-red-btn {
-            0% { box-shadow: 0 0 15px #dc2626; }
-            50% { box-shadow: 0 0 35px #dc2626; }
-            100% { box-shadow: 0 0 15px #dc2626; }
+            0% { transform: scale(1); box-shadow: 0 0 20px #dc2626; }
+            100% { transform: scale(1.02); box-shadow: 0 0 45px #ef4444; }
         }
 
         .feed-display {
@@ -333,8 +350,9 @@
             <div class="glass-card">
                 <div class="driver-header">
                     <div class="main-title">TACNET SCHOOL</div>
-                    <div class="creator-text">Creator: Earl A. Wood</div>
-                    <div class="patent-text">Patent Pending & Legal Disclaimer: Proprietary Safety System</div>
+                    <div class="creator-text">Creator: Earl A. Wood (Retired Deputy Sheriff)</div>
+                    <div class="patent-text">PATENT PENDING</div>
+                    <div class="disclaimer-text">LEGAL DISCLAIMER: Proprietary Emergency Safety System. Unauthorized duplication or distribution strictly prohibited.</div>
                 </div>
 
                 <div class="safety-banner-large">
@@ -352,8 +370,15 @@
                 <div class="grid-buttons">
                     <button class="btn-large btn-green" onclick="setDriverStatus('GREEN')">GREEN<br><small style="font-size:14px;">Normal Operation</small></button>
                     <button class="btn-large btn-yellow" onclick="setDriverStatus('YELLOW')">YELLOW<br><small style="font-size:14px;">Schedule Delay</small></button>
-                    <button class="btn-large btn-orange" onmousedown="holdOrange()" onmouseup="releaseOrange()">🎙️ ORANGE<br><small style="font-size:14px;">Hold to Talk</small></button>
-                    <button class="btn-large btn-red" onclick="setDriverStatus('RED')">🚨 RED EMERGENCY</button>
+                    <button class="btn-large btn-orange" onmousedown="holdOrange()" onmouseup="releaseOrange()" ontouchstart="holdOrange()" ontouchend="releaseOrange()">🎙️ ORANGE<br><small style="font-size:14px;">Hold to Talk</small></button>
+                    
+                    <!-- 5 SECOND HOLD RED EMERGENCY BUTTON -->
+                    <button id="btn-red-emergency" class="btn-large btn-red" 
+                            onmousedown="startRedHold()" onmouseup="cancelRedHold()" onmouseleave="cancelRedHold()"
+                            ontouchstart="startRedHold()" ontouchend="cancelRedHold()">
+                        <span id="red-btn-label">🚨 RED EMERGENCY</span><br>
+                        <small id="red-btn-sub" style="font-size:14px;">HOLD FOR 5 SECONDS TO BROADCAST</small>
+                    </button>
                 </div>
             </div>
 
@@ -416,6 +441,10 @@
         let busMarkers = {};
         let fleet = [];
         let currentActiveDriverSlot = 0; // Index 0-19
+
+        let redHoldTimer = null;
+        let redCountdownInterval = null;
+        let redHoldTimeLeft = 5;
 
         const baseLat = 37.5815;
         const baseLng = -79.0506;
@@ -563,6 +592,20 @@
             document.getElementById('driver-bus-title').innerText = activeBus.id ? `Bus #${activeBus.id}` : `Slot #${activeBus.slot} (Unassigned)`;
             document.getElementById('driver-name-sub').innerText = activeBus.driver ? `Driver: ${activeBus.driver}` : `Driver: Unassigned`;
             document.getElementById('driver-reply').innerText = activeBus.lastMessage;
+
+            const redBtn = document.getElementById('btn-red-emergency');
+            const redLabel = document.getElementById('red-btn-label');
+            const redSub = document.getElementById('red-btn-sub');
+
+            if (activeBus.status === 'RED') {
+                redBtn.classList.add('active-emergency');
+                redLabel.innerText = "🚨 EMERGENCY ALERT TRANSMITTED 🚨";
+                redSub.innerText = "COMMAND NOTIFIED - FLASHING ALERT ACTIVE";
+            } else {
+                redBtn.classList.remove('active-emergency');
+                redLabel.innerText = "🚨 RED EMERGENCY";
+                redSub.innerText = "HOLD FOR 5 SECONDS TO BROADCAST";
+            }
         }
 
         function updateMapDisplay() {
@@ -593,6 +636,44 @@
 
             updateDriverUIDisplay();
             updateMapDisplay();
+        }
+
+        /* 5-SECOND HOLD LOGIC FOR RED EMERGENCY BUTTON */
+        function startRedHold() {
+            let activeBus = fleet[currentActiveDriverSlot];
+            if (activeBus.status === 'RED') return; // Already active
+
+            redHoldTimeLeft = 5;
+            const redLabel = document.getElementById('red-btn-label');
+            const redSub = document.getElementById('red-btn-sub');
+
+            redLabel.innerText = "⚠️ HOLDING FOR EMERGENCY...";
+            redSub.innerText = `ACTIVATING IN ${redHoldTimeLeft} SECONDS...`;
+
+            redCountdownInterval = setInterval(() => {
+                redHoldTimeLeft--;
+                if (redHoldTimeLeft > 0) {
+                    redSub.innerText = `ACTIVATING IN ${redHoldTimeLeft} SECONDS...`;
+                }
+            }, 1000);
+
+            redHoldTimer = setTimeout(() => {
+                clearInterval(redCountdownInterval);
+                setDriverStatus('RED');
+            }, 5000);
+        }
+
+        function cancelRedHold() {
+            let activeBus = fleet[currentActiveDriverSlot];
+            if (activeBus.status === 'RED') return;
+
+            if (redHoldTimer) clearTimeout(redHoldTimer);
+            if (redCountdownInterval) clearInterval(redCountdownInterval);
+
+            redHoldTimer = null;
+            redCountdownInterval = null;
+
+            updateDriverUIDisplay();
         }
 
         function holdOrange() {
