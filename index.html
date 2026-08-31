@@ -230,7 +230,7 @@
         .badge-ORANGE { background: #ea580c; color: #fff; }
         .badge-RED { background: #dc2626; color: #fff; box-shadow: 0 0 10px #dc2626; }
 
-        /* BUS MAP MARKERS */
+        /* BUS & ADDRESS MARKERS */
         .bus-marker-pin {
             display: flex;
             align-items: center;
@@ -246,6 +246,15 @@
         .bus-marker-YELLOW { background: #ca8a04; }
         .bus-marker-ORANGE { background: #ea580c; }
         .bus-marker-RED { background: #dc2626; animation: alertPulse 1s infinite alternate; }
+
+        .address-pin-dot {
+            width: 20px;
+            height: 20px;
+            background: #fbbf24;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #fbbf24;
+        }
 
         @keyframes alertPulse {
             0% { box-shadow: 0 0 5px #dc2626; transform: scale(1); }
@@ -301,7 +310,7 @@
 
             <div class="map-card">
                 <div style="padding: 10px; background: rgba(0, 240, 255, 0.1); border-bottom: 1px solid #00f0ff; font-size: 13px; font-weight: bold; color: #00f0ff;">
-                    📍 CLICK MAP TO SET PRECISE CAMPUS CENTER
+                    📍 CLICK MAP OR DRAG PIN TO SET EXACT CAMPUS CENTER
                 </div>
                 <div id="setupMap" class="leaflet-map-frame"></div>
             </div>
@@ -362,12 +371,12 @@
     </div>
 
     <script>
-        // Default center: Amherst County High School, VA
         let centerLat = 37.5755;
         let centerLng = -79.0531;
 
         let setupMap, monitorMap;
-        let setupMarker, perimeterPolygon;
+        let setupMarker, monitorAddressMarker;
+        let perimeterPolygon;
         let busMapMarkers = [];
 
         let CONFIG = {
@@ -383,7 +392,6 @@
         function initFleet() {
             fleet = [];
             for (let i = 1; i <= 20; i++) {
-                // Spread buses around the campus location
                 let offsetLat = (Math.random() - 0.5) * 0.012;
                 let offsetLng = (Math.random() - 0.5) * 0.012;
                 fleet.push({
@@ -428,6 +436,7 @@
             }).addTo(monitorMap);
 
             updateCampusPerimeter();
+            renderAddressPin();
             renderBusMarkers();
         }
 
@@ -456,6 +465,29 @@
             perimeterPolygon.bindTooltip("🏫 CAMPUS PERIMETER BOUNDARY", { permanent: true, direction: "top" });
         }
 
+        function renderAddressPin() {
+            if (monitorAddressMarker) {
+                monitorMap.removeLayer(monitorAddressMarker);
+            }
+
+            let addressIcon = L.divIcon({
+                className: 'custom-address-icon',
+                html: `<div style="display: flex; align-items: center; gap: 6px;"><div class="address-pin-dot"></div><span style="background: #020926; color: #fbbf24; padding: 2px 8px; border: 2px solid #fbbf24; border-radius: 4px; font-size: 12px; font-weight: 900; box-shadow: 0 0 10px rgba(0,0,0,0.8);">📍 ${CONFIG.school}</span></div>`,
+                iconSize: [220, 30],
+                iconAnchor: [10, 15]
+            });
+
+            monitorAddressMarker = L.marker([centerLat, centerLng], { icon: addressIcon }).addTo(monitorMap);
+            let fullAddr = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ');
+            monitorAddressMarker.bindPopup(`
+                <div style="color:#020926; font-family:sans-serif;">
+                    <b style="font-size:15px; color:#d97706;">🎯 Campus Address Target</b><br>
+                    <b>School:</b> ${CONFIG.school}<br>
+                    <small>📍 ${fullAddr}</small>
+                </div>
+            `);
+        }
+
         function geocodeAndSave() {
             CONFIG.district = document.getElementById('cfg-district').value;
             CONFIG.school = document.getElementById('cfg-school').value;
@@ -476,13 +508,13 @@
                         setupMarker.setLatLng([centerLat, centerLng]);
                         monitorMap.setView([centerLat, centerLng], 16);
 
-                        // Recalculate bus positions around new target address
                         fleet.forEach(b => {
                             b.lat = centerLat + (Math.random() - 0.5) * 0.012;
                             b.lng = centerLng + (Math.random() - 0.5) * 0.012;
                         });
 
                         updateCampusPerimeter();
+                        renderAddressPin();
                         renderBusMarkers();
                         updateApp();
                         showView('command');
@@ -492,6 +524,7 @@
                 })
                 .catch(() => {
                     updateCampusPerimeter();
+                    renderAddressPin();
                     renderBusMarkers();
                     updateApp();
                     showView('command');
