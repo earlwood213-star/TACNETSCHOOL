@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACNET School - Live GPS Safety Platform</title>
-    <!-- FREE Leaflet CSS Engine (No API Key Required) -->
+    <title>TACNET School - Live GPS & Intercom Safety Platform</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
@@ -234,7 +233,8 @@
             padding: 0.65rem;
             margin-top: 0.4rem;
             color: var(--neon-blue);
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            font-weight: bold;
             text-align: center;
         }
 
@@ -336,9 +336,37 @@
             transition: all 0.2s;
         }
 
-        .clear-slot-btn:active {
-            background: #ef4444;
-            color: #fff;
+        /* DISPATCH INTERCOM BOX */
+        .intercom-box {
+            padding: 0.85rem;
+            border-bottom: 2px solid var(--panel-border);
+            background: rgba(249, 115, 22, 0.15);
+        }
+
+        .intercom-title {
+            font-size: 0.85rem;
+            font-weight: 900;
+            color: #ffaa55;
+            margin-bottom: 0.4rem;
+        }
+
+        .intercom-btn {
+            background: #f97316;
+            color: white;
+            border: 1px solid #ffaa55;
+            padding: 0.65rem;
+            border-radius: 8px;
+            font-weight: 800;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
+            transition: all 0.15s;
+        }
+
+        .intercom-btn:active {
+            background: #ea580c;
+            transform: scale(0.97);
+            box-shadow: 0 0 20px #ffaa55;
         }
 
         .bus-list {
@@ -430,7 +458,6 @@
     </header>
 
     <main>
-        <!-- BUS DRIVER VIEW -->
         <div id="driver-view">
             <div class="safety-banner">
                 <p>⚠️ WATCH YOUR SURROUNDINGS AND DRIVE SAFELY! 🛑</p>
@@ -481,16 +508,13 @@
             </div>
         </div>
 
-        <!-- SCHOOL COMMAND MONITOR -->
         <div id="command-view" class="hidden">
             <div class="sidebar">
-                <!-- SCHOOL FLEET CONFIGURATOR WITH RESET/CLEAR -->
                 <div class="config-box">
                     <div class="config-title">✏️ ENTER DISTRICT BUS NUMBERS</div>
                     <div class="config-inputs">
                         <select id="select-bus-slot" onchange="loadBusConfigValues()">
-                            <!-- Populated via JS -->
-                        </select>
+                            </select>
                         <input type="text" id="input-bus-id" placeholder="Bus # (e.g. 104)">
                     </div>
                     <div class="config-inputs">
@@ -498,8 +522,24 @@
                     </div>
                     <div class="config-action-row">
                         <button class="config-btn" onclick="saveCustomBusNumber()">Save & Next ➔</button>
-                        <button class="clear-slot-btn" onclick="clearSelectedSlot()">🗑️ Reset Slot</button>
+                        <button class="clear-slot-btn" onclick="clearSelectedSlot()">🗑️ Reset</button>
                     </div>
+                </div>
+
+                <div class="intercom-box">
+                    <div class="intercom-title">🎙️ DISPATCH VOICE INTERCOM (ORANGE)</div>
+                    <div class="config-inputs">
+                        <select id="select-talk-bus" style="width: 100%;">
+                            </select>
+                    </div>
+                    <div class="config-inputs">
+                        <input type="text" id="input-dispatch-msg" placeholder="Message or Speak Audio..." style="width: 100%;" value="Copy that, proceed with caution.">
+                    </div>
+                    <button class="intercom-btn" 
+                            onmousedown="transmitDispatchVoice()" 
+                            ontouchstart="transmitDispatchVoice()">
+                        🎙️ HOLD TO TRANSMIT TO DRIVER
+                    </button>
                 </div>
 
                 <div style="padding: 0.75rem 1rem; font-weight: bold; color: var(--neon-blue); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
@@ -520,7 +560,6 @@
         </div>
     </main>
 
-    <!-- FREE Leaflet JS Engine -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map;
@@ -545,10 +584,16 @@
 
         function populateBusSelectDropdown() {
             const select = document.getElementById('select-bus-slot');
-            select.innerHTML = fleetData.map((bus, idx) => {
+            const talkSelect = document.getElementById('select-talk-bus');
+
+            const optionsHTML = fleetData.map((bus, idx) => {
                 const labelText = bus.id ? `Slot #${bus.slotIndex} (Bus ${bus.id})` : `Slot #${bus.slotIndex} [EMPTY]`;
                 return `<option value="${idx}">${labelText}</option>`;
             }).join('');
+
+            select.innerHTML = optionsHTML;
+            talkSelect.innerHTML = optionsHTML;
+
             loadBusConfigValues();
         }
 
@@ -629,7 +674,6 @@
         }
 
         function initMap() {
-            // LOCK MAP CENTER DIRECTLY ON AMHERST COUNTY, VA
             map = L.map('map').setView([baseLat, baseLng], 12);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -713,67 +757,4 @@
             if (activeBus) {
                 activeBus.status = status;
                 if (status !== 'RED') {
-                    document.getElementById('alert-banner').style.display = 'none';
-                }
-                setButtonActiveState(status);
-                updateFleetMap();
-            }
-        }
-
-        function startPTT() {
-            updateDriverStatus('ORANGE');
-            document.getElementById('driver-reply-box').innerText = "🎙️ SPEAKING TO MAIN OFFICE...";
-        }
-
-        function stopPTT() {
-            document.getElementById('driver-reply-box').innerText = "Office Reply: \"Copy that.\"";
-            setTimeout(() => { resetDriverSystem(); }, 5000);
-        }
-
-        function triggerEmergency() {
-            updateDriverStatus('RED');
-            const activeBus = fleetData[0];
-            const busLabel = activeBus.id ? `BUS #${activeBus.id}` : `SLOT #${activeBus.slotIndex}`;
-            document.getElementById('alert-banner').style.display = 'flex';
-            document.getElementById('alert-text').innerText = `🚨 RED EMERGENCY: ${busLabel}`;
-        }
-
-        function acknowledgeAlert() {
-            document.getElementById('alert-banner').style.display = 'none';
-        }
-
-        function resetDriverSystem() {
-            updateDriverStatus('GREEN');
-            document.getElementById('driver-reply-box').innerText = "Channel Ready";
-            document.getElementById('alert-banner').style.display = 'none';
-        }
-
-        function renderSidebar() {
-            const listContainer = document.getElementById('bus-list');
-            if (!listContainer) return;
-
-            listContainer.innerHTML = fleetData.map(bus => `
-                <div class="bus-card" onclick="focusBus('${bus.slotIndex}')">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong>${bus.id ? `Bus #${bus.id}` : `Slot #${bus.slotIndex} <span style="font-weight:normal; opacity:0.6;">(Empty)</span>`}</strong>
-                        <span class="badge" style="background:var(--status-${bus.status.toLowerCase()}); color:${bus.status==='YELLOW'?'#000':'#fff'};">${bus.status}</span>
-                    </div>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top:0.2rem;">${bus.driver ? `Driver: ${bus.driver}` : `Unassigned`}</p>
-                </div>
-            `).join('');
-        }
-
-        function focusBus(slotIndex) {
-            const bus = fleetData.find(b => b.slotIndex == slotIndex);
-            if (bus && map) {
-                map.setView([bus.lat, bus.lng], 14);
-                busMarkers[slotIndex].openPopup();
-            }
-        }
-
-        window.onload = () => {
-            populateBusSelectDropdown();
-        };
-    </script>
-</body>
-</html>
+                    document.getElementById('alert-banner').style.display = '
