@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TACNET School - Safety Platform</title>
+    <!-- FREE Leaflet CSS Engine (No API Key Required) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
@@ -83,8 +84,8 @@
             width: 100%;
             max-width: 440px;
             margin: auto;
-            padding: 1.5rem;
-            gap: 1.25rem;
+            padding: 1.25rem;
+            gap: 1rem;
         }
 
         .glass-box {
@@ -96,11 +97,29 @@
             box-shadow: 0 8px 32px 0 rgba(0, 100, 255, 0.37);
         }
 
+        /* DRIVER SAFETY BANNER */
+        .safety-banner {
+            background: linear-gradient(90deg, rgba(234, 179, 8, 0.2) 0%, rgba(34, 197, 94, 0.2) 100%);
+            border: 2px solid #eab308;
+            border-radius: 12px;
+            padding: 0.85rem;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
+        }
+
+        .safety-banner p {
+            color: #fef08a;
+            font-weight: 900;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px rgba(0,0,0,0.8);
+        }
+
         .status-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-top: 0.75rem;
+            gap: 0.85rem;
+            margin-top: 0.5rem;
         }
 
         .status-btn {
@@ -115,6 +134,7 @@
             align-items: center;
             gap: 0.3rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            user-select: none;
         }
 
         .btn-green { background: #16a34a; border: 2px solid #4ade80; }
@@ -124,9 +144,21 @@
             background: #dc2626; 
             border: 2px solid #fca5a5;
             grid-column: span 2; 
-            padding: 1.5rem; 
-            font-size: 1.3rem;
+            padding: 1.25rem; 
+            font-size: 1.2rem;
             box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+        }
+
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid #fff;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            width: 100%;
         }
 
         .reply-box {
@@ -236,7 +268,13 @@
     </header>
 
     <main>
+        <!-- BUS DRIVER VIEW (NO MAP) -->
         <div id="driver-view">
+            <!-- DRIVER SAFETY REMINDER BANNER -->
+            <div class="safety-banner">
+                <p>⚠️ WATCH YOUR SURROUNDINGS AND DRIVE SAFELY! 🛑</p>
+            </div>
+
             <div class="glass-box">
                 <h2 style="color: var(--neon-blue);">Bus #20</h2>
                 <p>Route: Amherst North | Driver: <strong>John Doe</strong></p>
@@ -270,9 +308,11 @@
                 <div class="reply-box" id="driver-reply-box">
                     "Channel Ready"
                 </div>
+                <button class="reset-btn" onclick="resetDriverSystem()">🔄 Reset / Clear Status</button>
             </div>
         </div>
 
+        <!-- SCHOOL COMMAND MONITOR (20 BUSES) -->
         <div id="command-view" class="hidden">
             <div class="sidebar">
                 <div style="padding: 1rem; font-weight: bold; color: var(--neon-blue); border-bottom: 1px solid rgba(255,255,255,0.1);">
@@ -290,6 +330,7 @@
         </div>
     </main>
 
+    <!-- FREE Leaflet JS Engine -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map;
@@ -336,7 +377,7 @@
         function initMap() {
             map = L.map('map').setView([baseLat, baseLng], 12);
             
-            // 100% FREE OpenStreetMap Tiles (No API key needed!)
+            // 100% FREE OpenStreetMap Tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap contributors'
@@ -402,6 +443,11 @@
 
         function stopPTT() {
             document.getElementById('driver-reply-box').innerText = "Office Reply: \"Copy that, John.\"";
+            
+            // Auto-reset message and status back to GREEN after 5 seconds
+            setTimeout(() => {
+                resetDriverSystem();
+            }, 5000);
         }
 
         function triggerEmergency() {
@@ -411,6 +457,12 @@
         }
 
         function acknowledgeAlert() {
+            document.getElementById('alert-banner').style.display = 'none';
+        }
+
+        function resetDriverSystem() {
+            updateDriverStatus('GREEN');
+            document.getElementById('driver-reply-box').innerText = "Channel Ready";
             document.getElementById('alert-banner').style.display = 'none';
         }
 
