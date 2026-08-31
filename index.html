@@ -43,6 +43,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 60px;
         }
 
         .brand-title {
@@ -102,6 +103,7 @@
             display: flex;
             flex: 1;
             position: relative;
+            height: calc(100vh - 60px);
         }
 
         /* BUS DRIVER UI */
@@ -125,7 +127,6 @@
             box-shadow: 0 8px 32px 0 rgba(0, 100, 255, 0.37);
         }
 
-        /* DRIVER SAFETY BANNER */
         .safety-banner {
             background: linear-gradient(90deg, rgba(234, 179, 8, 0.2) 0%, rgba(34, 197, 94, 0.2) 100%);
             border: 2px solid #eab308;
@@ -263,15 +264,16 @@
 
         .sidebar {
             width: 380px;
+            min-width: 380px;
             background: var(--panel-glass);
             backdrop-filter: blur(16px);
             border-right: 2px solid var(--panel-border);
             display: flex;
             flex-direction: column;
             z-index: 1000;
+            height: 100%;
         }
 
-        /* SCHOOL INPUT PANEL */
         .config-box {
             padding: 0.85rem;
             border-bottom: 2px solid var(--panel-border);
@@ -320,7 +322,6 @@
             cursor: pointer;
             flex: 2;
             box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
-            transition: all 0.2s;
         }
 
         .clear-slot-btn {
@@ -333,10 +334,8 @@
             font-size: 0.8rem;
             cursor: pointer;
             flex: 1;
-            transition: all 0.2s;
         }
 
-        /* DISPATCH INTERCOM BOX */
         .intercom-box {
             padding: 0.85rem;
             border-bottom: 2px solid var(--panel-border);
@@ -360,13 +359,6 @@
             width: 100%;
             cursor: pointer;
             box-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
-            transition: all 0.15s;
-        }
-
-        .intercom-btn:active {
-            background: #ea580c;
-            transform: scale(0.97);
-            box-shadow: 0 0 20px #ffaa55;
         }
 
         .bus-list {
@@ -378,7 +370,6 @@
             padding: 0.85rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
-            transition: background 0.2s;
         }
 
         .bus-card:hover {
@@ -395,14 +386,20 @@
         .map-container {
             flex: 1;
             position: relative;
+            height: 100%;
+            min-height: 400px;
+            background: #021078;
         }
 
         #map {
             width: 100%;
             height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
 
-        /* GPS DOT MARKERS */
         .dot-circle {
             width: 18px;
             height: 18px;
@@ -513,8 +510,7 @@
                 <div class="config-box">
                     <div class="config-title">✏️ ENTER DISTRICT BUS NUMBERS</div>
                     <div class="config-inputs">
-                        <select id="select-bus-slot" onchange="loadBusConfigValues()">
-                            </select>
+                        <select id="select-bus-slot" onchange="loadBusConfigValues()"></select>
                         <input type="text" id="input-bus-id" placeholder="Bus # (e.g. 104)">
                     </div>
                     <div class="config-inputs">
@@ -529,15 +525,12 @@
                 <div class="intercom-box">
                     <div class="intercom-title">🎙️ DISPATCH VOICE INTERCOM (ORANGE)</div>
                     <div class="config-inputs">
-                        <select id="select-talk-bus" style="width: 100%;">
-                            </select>
+                        <select id="select-talk-bus" style="width: 100%;"></select>
                     </div>
                     <div class="config-inputs">
                         <input type="text" id="input-dispatch-msg" placeholder="Message or Speak Audio..." style="width: 100%;" value="Copy that, proceed with caution.">
                     </div>
-                    <button class="intercom-btn" 
-                            onmousedown="transmitDispatchVoice()" 
-                            ontouchstart="transmitDispatchVoice()">
+                    <button class="intercom-btn" onmousedown="transmitDispatchVoice()" ontouchstart="transmitDispatchVoice()">
                         🎙️ HOLD TO TRANSMIT TO DRIVER
                     </button>
                 </div>
@@ -566,11 +559,9 @@
         let busMarkers = {};
         let fleetData = [];
 
-        // HARDCODED MAP CENTER: AMHERST COUNTY, VIRGINIA
         const baseLat = 37.5815;
         const baseLng = -79.0506;
 
-        // Initialize 20 slots locked within Amherst County, VA
         for (let i = 1; i <= 20; i++) {
             fleetData.push({
                 slotIndex: i,
@@ -622,10 +613,94 @@
             }
 
             let nextIdx = idx + 1;
-            if (nextIdx >= fleetData.length) {
-                nextIdx = 0;
-            }
+            if (nextIdx >= fleetData.length) nextIdx = 0;
 
             populateBusSelectDropdown();
             document.getElementById('select-bus-slot').value = nextIdx;
             loadBusConfigValues();
+            updateFleetMap();
+
+            document.getElementById('input-bus-id').focus();
+            document.getElementById('input-bus-id').select();
+        }
+
+        function clearSelectedSlot() {
+            const idx = parseInt(document.getElementById('select-bus-slot').value);
+            fleetData[idx].id = '';
+            fleetData[idx].driver = '';
+
+            if (idx === 0) {
+                document.getElementById('driver-bus-title').innerText = `Slot #1 (Unassigned)`;
+                document.getElementById('driver-name-text').innerText = 'Unassigned';
+            }
+
+            document.getElementById('input-bus-id').value = '';
+            document.getElementById('input-bus-driver').value = '';
+
+            populateBusSelectDropdown();
+            document.getElementById('select-bus-slot').value = idx;
+            updateFleetMap();
+
+            document.getElementById('input-bus-id').focus();
+        }
+
+        function switchView(view) {
+            const driverView = document.getElementById('driver-view');
+            const commandView = document.getElementById('command-view');
+            const btnDriver = document.getElementById('btn-view-driver');
+            const btnCommand = document.getElementById('btn-view-command');
+
+            if (view === 'driver') {
+                driverView.classList.remove('hidden');
+                commandView.classList.add('hidden');
+                btnDriver.classList.add('active');
+                btnCommand.classList.remove('active');
+            } else {
+                driverView.classList.add('hidden');
+                commandView.classList.remove('hidden');
+                btnCommand.classList.add('active');
+                btnDriver.classList.remove('active');
+                
+                if (!map) {
+                    initMap();
+                } else {
+                    setTimeout(() => { map.invalidateSize(); }, 200);
+                }
+            }
+        }
+
+        function initMap() {
+            if (map) return;
+            map = L.map('map').setView([baseLat, baseLng], 12);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            renderFleetOnMap();
+            renderSidebar();
+            setInterval(simulateMovement, 3000);
+
+            setTimeout(() => { map.invalidateSize(); }, 200);
+        }
+
+        function getDotIcon(status) {
+            return L.divIcon({
+                className: 'svg-marker-icon',
+                html: `<div class="dot-circle dot-${status.toLowerCase()}"></div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+        }
+
+        function renderFleetOnMap() {
+            if (!map) return;
+            fleetData.forEach(bus => {
+                const marker = L.marker([bus.lat, bus.lng], { icon: getDotIcon(bus.status) }).addTo(map);
+                marker.bindPopup(getPopupContent(bus));
+                busMarkers[bus.slotIndex] = marker;
+            });
+        }
+
+        function getPopupContent(bus) {
