@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACNET SCHOOL - Driver & Command Platform</title>
+    <title>TACNET SCHOOL - Command & Driver Platform</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
@@ -18,1008 +18,441 @@
         }
 
         .view-switcher {
-            background: rgba(1, 10, 42, 0.9);
+            background: rgba(1, 10, 42, 0.95);
             border-bottom: 2px solid #00f0ff;
-            padding: 8px 20px;
+            padding: 10px 20px;
             display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            z-index: 100;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
         }
+
+        .school-branding-tag {
+            font-size: 18px;
+            font-weight: 900;
+            color: #00f0ff;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn-group { display: flex; gap: 10px; }
 
         .nav-btn { 
             background: rgba(10, 50, 160, 0.7); 
             color: #ffffff; 
             border: 2px solid #00f0ff; 
-            padding: 10px 22px; 
+            padding: 8px 16px; 
             border-radius: 8px; 
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 800; 
             cursor: pointer; 
-            transition: all 0.3s ease;
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
         }
-        .nav-btn.active { 
-            background: #00f0ff; 
-            color: #020926; 
-            box-shadow: 0 0 15px #00f0ff;
-        }
+        .nav-btn.active { background: #00f0ff; color: #020926; box-shadow: 0 0 15px #00f0ff; }
+        .nav-btn-setup { border-color: #fbbf24; color: #fbbf24; }
+        .nav-btn-setup.active { background: #fbbf24; color: #020926; box-shadow: 0 0 15px #fbbf24; }
 
-        #main-container { flex: 1; position: relative; overflow: hidden; }
+        #main-container { flex: 1; position: relative; width: 100%; height: calc(100vh - 60px); }
         .view-panel { width: 100%; height: 100%; display: flex; }
         .hidden { display: none !important; }
+
+        /* SETUP VIEW */
+        #setup-view {
+            flex-direction: column;
+            align-items: center;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .setup-card {
+            width: 100%;
+            max-width: 700px;
+            background: rgba(0, 120, 255, 0.15);
+            border: 2px solid #fbbf24;
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group.full-width { grid-column: span 2; }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 800;
+            color: #00f0ff;
+            text-transform: uppercase;
+        }
+
+        input[type="text"], select.setup-select {
+            background: #000000 !important;
+            color: #ffffff !important;
+            border: 2px solid #00f0ff !important;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            pointer-events: auto !important;
+            user-select: text !important;
+        }
+
+        input[type="text"]:focus, select.setup-select:focus {
+            border-color: #fbbf24 !important;
+            box-shadow: 0 0 10px #fbbf24;
+        }
+
+        .btn-save-setup {
+            background: #fbbf24;
+            color: #020926;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+        }
 
         /* DRIVER VIEW */
         #driver-view { 
             flex-direction: column; 
             align-items: center;
-            padding: 25px; 
+            padding: 20px; 
             overflow-y: auto; 
-            gap: 20px;
+            gap: 15px;
         }
 
         .glass-card {
             width: 100%;
             max-width: 750px;
             background: rgba(0, 120, 255, 0.12);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 2px solid rgba(0, 240, 255, 0.5);
             border-radius: 18px;
-            padding: 22px;
-            box-shadow: 0 8px 32px 0 rgba(0, 240, 255, 0.18), inset 0 0 15px rgba(0, 240, 255, 0.1);
-        }
-
-        .driver-header {
-            text-align: center;
-            border-bottom: 2px solid rgba(0, 240, 255, 0.3);
-            padding-bottom: 15px;
-            margin-bottom: 15px;
-        }
-        .main-title { 
-            font-size: 42px; 
-            font-weight: 900; 
-            color: #00f0ff; 
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 20px rgba(0, 240, 255, 0.8);
-        }
-        .creator-text { 
-            font-size: 20px; 
-            font-weight: 700;
-            color: #7dd3fc; 
-            margin-top: 4px;
-        }
-        .patent-text { 
-            font-size: 14px; 
-            color: #fbbf24; 
-            font-weight: bold;
-            letter-spacing: 1px;
-            margin-top: 6px;
-        }
-        .disclaimer-text {
-            font-size: 13px;
-            color: #94a3b8;
-            font-style: italic;
-            margin-top: 4px;
-            line-height: 1.3;
-        }
-
-        .safety-banner-large {
-            background: #eab308;
-            color: #000000;
-            font-size: 22px;
-            font-weight: 900;
-            padding: 14px 20px;
-            border-radius: 12px;
-            text-align: center;
-            letter-spacing: 1px;
-            box-shadow: 0 0 20px rgba(234, 179, 8, 0.6);
-            text-transform: uppercase;
-            margin-top: 10px;
-        }
-
-        .bus-status-title {
-            font-size: 32px;
-            font-weight: 900;
-            color: #00f0ff;
-            margin-bottom: 4px;
-            text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
-        }
-        .bus-status-sub {
-            font-size: 22px;
-            font-weight: 700;
-            color: #e2e8f0;
-        }
-
-        .grid-buttons { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 16px; 
-            margin-top: 15px; 
-        }
-
-        .btn-large { 
-            padding: 22px; 
-            border-radius: 14px; 
-            border: 2px solid #ffffff; 
-            font-size: 24px; 
-            font-weight: 900; 
-            color: #ffffff; 
-            cursor: pointer; 
-            text-align: center; 
-            text-transform: uppercase;
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        .btn-large:active { transform: scale(0.97); }
-
-        .btn-green { background: #16a34a; box-shadow: 0 0 15px rgba(22, 163, 74, 0.5); }
-        .btn-yellow { background: #ca8a04; color: #ffffff; box-shadow: 0 0 15px rgba(202, 138, 4, 0.5); }
-        .btn-orange { background: #ea580c; box-shadow: 0 0 15px rgba(234, 88, 12, 0.5); }
-        
-        .btn-red { 
-            background: #991b1b; 
-            grid-column: span 2; 
-            font-size: 26px; 
-            padding: 26px;
-            box-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
-            border: 3px solid #f87171;
-            position: relative;
-        }
-
-        .btn-red.active-emergency {
-            background: #dc2626 !important;
-            box-shadow: 0 0 35px #dc2626 !important;
-            animation: pulse-red-btn 0.8s infinite alternate;
-        }
-
-        @keyframes pulse-red-btn {
-            0% { transform: scale(1); box-shadow: 0 0 20px #dc2626; }
-            100% { transform: scale(1.02); box-shadow: 0 0 45px #ef4444; }
-        }
-
-        .feed-display {
-            font-size: 22px;
-            font-weight: 800;
-            color: #00f0ff;
-            margin-top: 10px;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(0, 240, 255, 0.4);
-        }
-
-        .select-driver-slot {
-            background: #000;
-            color: #00f0ff;
-            border: 2px solid #00f0ff;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            width: 100%;
-            margin-bottom: 12px;
-        }
-
-        /* SCHOOL COMMAND MONITOR VIEW */
-        .sidebar { 
-            width: 440px; 
-            background: rgba(2, 9, 38, 0.95); 
-            border-right: 2px solid #00f0ff; 
-            display: flex; 
-            flex-direction: column; 
-            padding: 15px;
-            gap: 15px;
-        }
-
-        .panel-glass {
-            background: rgba(0, 120, 255, 0.1);
-            border: 1px solid rgba(0, 240, 255, 0.3);
-            border-radius: 12px;
-            padding: 12px;
-        }
-
-        .input-row { display: flex; gap: 8px; margin-top: 8px; }
-        .input-row input, .input-row select { 
-            background: #000; 
-            color: #fff; 
-            border: 1px solid #00f0ff; 
-            padding: 10px; 
-            border-radius: 6px; 
-            font-size: 15px;
-            flex: 1; 
-        }
-
-        .btn-group-row {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .action-btn { 
-            background: #00f0ff; 
-            color: #020926; 
-            border: none; 
-            padding: 12px; 
-            border-radius: 8px; 
-            font-size: 15px;
-            font-weight: 800; 
-            cursor: pointer; 
-            flex: 2; 
-        }
-
-        .erase-btn {
-            background: #ef4444;
-            color: #ffffff;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 800;
-            cursor: pointer;
-            flex: 1;
-        }
-
-        .intercom-btn { 
-            background: #f97316; 
-            color: #ffffff; 
-            border: none; 
-            padding: 12px; 
-            border-radius: 8px; 
-            font-size: 16px;
-            font-weight: 800; 
-            cursor: pointer; 
-            width: 100%; 
-            margin-top: 8px; 
-        }
-
-        .report-btn {
-            background: #10b981;
-            color: #ffffff;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 800;
-            cursor: pointer;
-            width: 100%;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-        }
-
-        .reset-all-btn { 
-            background: #ea580c; 
-            color: #ffffff; 
-            border: none; 
-            padding: 12px; 
-            border-radius: 8px; 
-            font-size: 16px;
-            font-weight: 800; 
-            cursor: pointer; 
-            width: 100%; 
-            margin-top: 8px;
-        }
-
-        .bus-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .bus-item { 
-            background: rgba(255,255,255,0.05); 
-            padding: 12px; 
-            border-radius: 8px;
-            border-left: 4px solid #00f0ff;
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        
-        .badge { padding: 6px 10px; border-radius: 6px; font-size: 14px; font-weight: 800; }
-        .badge-GREEN { background: #22c55e; color: #fff; }
-        .badge-YELLOW { background: #eab308; color: #000; }
-        .badge-ORANGE { background: #f97316; color: #fff; }
-        .badge-RED { background: #ef4444; color: #fff; animation: blinker 0.8s infinite; }
-
-        .btn-bus-reset {
-            background: #38bdf8;
-            color: #000;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        .map-box { flex: 1; height: 100%; background: #000; position: relative; }
-        #map { width: 100%; height: 100%; }
-
-        #emergency-alert-bar {
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: #ef4444;
-            color: white;
-            padding: 12px 28px;
-            border-radius: 10px;
-            font-weight: 900;
-            font-size: 20px;
-            box-shadow: 0 0 20px #000;
-            display: none;
-            animation: blinker 0.8s infinite;
-        }
-
-        @keyframes blinker { 50% { opacity: 0.3; } }
-
-        .flashing-red-icon {
-            background-color: #ef4444;
-            border: 3px solid #ffffff;
-            border-radius: 50%;
-            box-shadow: 0 0 15px #ef4444;
-            animation: pulse-red-ring 1s infinite;
-        }
-
-        @keyframes pulse-red-ring {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.9); }
-            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        /* REPORT MODAL & PRINT STYLES */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
 
-        .report-card {
-            background: #ffffff;
-            color: #000000;
-            width: 100%;
-            max-width: 900px;
-            max-height: 90vh;
-            border-radius: 12px;
-            padding: 30px;
-            overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
+        .driver-header { text-align: center; border-bottom: 2px solid rgba(0, 240, 255, 0.3); padding-bottom: 12px; }
+        .main-title { font-size: 38px; font-weight: 900; color: #00f0ff; }
+        .school-title-sub { font-size: 22px; font-weight: 800; color: #ffffff; margin-top: 2px; }
+        .school-address-sub { font-size: 14px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
 
-        .report-header-print {
-            border-bottom: 3px solid #000;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
+        .grid-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+        .btn-large { padding: 20px; border-radius: 12px; border: 2px solid #fff; font-size: 22px; font-weight: 900; color: #fff; cursor: pointer; text-align: center; }
+        .btn-green { background: #16a34a; }
+        .btn-yellow { background: #ca8a04; }
+        .btn-orange { background: #ea580c; }
+        .btn-red { background: #991b1b; grid-column: span 2; font-size: 24px; padding: 22px; border: 3px solid #f87171; }
 
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 14px;
-        }
+        .select-driver-slot { background: #000; color: #00f0ff; border: 2px solid #00f0ff; padding: 10px; border-radius: 8px; font-size: 16px; font-weight: bold; width: 100%; margin-bottom: 10px; }
 
-        .report-table th, .report-table td {
-            border: 1px solid #cbd5e1;
-            padding: 10px;
-            text-align: left;
-        }
+        /* COMMAND MONITOR VIEW */
+        .sidebar { width: 400px; background: rgba(2, 9, 38, 0.95); border-right: 2px solid #00f0ff; display: flex; flex-direction: column; padding: 15px; gap: 12px; }
+        .panel-glass { background: rgba(0, 120, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 12px; padding: 12px; }
+        .input-row { display: flex; gap: 8px; margin-top: 8px; }
+        .input-row select { background: #000; color: #fff; border: 1px solid #00f0ff; padding: 8px; border-radius: 6px; flex: 1; }
+        .btn-group-row { display: flex; gap: 8px; margin-top: 8px; }
+        .action-btn { background: #00f0ff; color: #020926; border: none; padding: 10px; border-radius: 6px; font-weight: 800; cursor: pointer; flex: 2; }
+        .erase-btn { background: #ef4444; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: 800; cursor: pointer; flex: 1; }
 
-        .report-table th {
-            background: #f1f5f9;
-            font-weight: bold;
-        }
+        .bus-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .bus-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; border-left: 4px solid #00f0ff; display: flex; justify-content: space-between; align-items: center; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 800; }
+        .badge-GREEN { background: #22c55e; color: #fff; }
 
-        .report-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-            justify-content: flex-end;
-        }
-
-        .btn-modal {
-            padding: 10px 18px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-        }
-
-        @media print {
-            body * { visibility: hidden; }
-            .report-card, .report-card * { visibility: visible; }
-            .report-card { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; box-shadow: none; }
-            .report-actions { display: none !important; }
-        }
+        .map-box { flex: 1; height: 100%; width: 100%; background: #000; position: relative; }
+        #map { width: 100%; height: 100%; min-height: 400px; }
     </style>
 </head>
 <body>
 
     <div class="view-switcher">
-        <button id="tab-driver" class="nav-btn active" onclick="showView('driver')">🏠 MAIN DRIVER UI</button>
-        <button id="tab-command" class="nav-btn" onclick="showView('command')">🖥️ SCHOOL MONITOR VIEW</button>
+        <div class="school-branding-tag" id="header-district-name">TACNET SCHOOL SYSTEM</div>
+        <div class="nav-btn-group">
+            <button id="tab-setup" class="nav-btn nav-btn-setup active" onclick="showView('setup')">⚙️ LOCATION SETUP</button>
+            <button id="tab-driver" class="nav-btn" onclick="showView('driver')">🏠 DRIVER UI</button>
+            <button id="tab-command" class="nav-btn" onclick="showView('command')">🖥️ MONITOR MAP</button>
+        </div>
     </div>
 
     <div id="main-container">
+
+        <!-- SETUP PANEL -->
+        <div id="setup-view" class="view-panel">
+            <div class="setup-card">
+                <h2 style="color: #fbbf24; font-size: 24px; border-bottom: 2px solid #fbbf24; padding-bottom: 10px;">⚙️ SYSTEM & LOCATION SETUP</h2>
+                
+                <form onsubmit="event.preventDefault(); applySetup();" autocomplete="off">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>School District Name</label>
+                            <input type="text" id="cfg-district" placeholder="Enter District Name (e.g. Fairfax County Public Schools)" autocomplete="off">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>School Campus Name</label>
+                            <input type="text" id="cfg-school" placeholder="Enter Campus Name (e.g. Oakton High School)" autocomplete="off">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Street Address</label>
+                            <input type="text" id="cfg-address" placeholder="Enter Street Address" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>City / Region Preset</label>
+                            <select id="cfg-preset" class="setup-select" onchange="applyPresetCoordinates()">
+                                <option value="38.8821,-77.2754">Fairfax / Vienna, VA</option>
+                                <option value="38.8462,-77.3064">City of Fairfax, VA</option>
+                                <option value="39.1157,-77.5636">Loudoun / Leesburg, VA</option>
+                                <option value="38.7509,-77.4753">Prince William / Manassas, VA</option>
+                                <option value="37.5407,-77.4360">Richmond, VA</option>
+                                <option value="37.2707,-79.9414">Roanoke, VA</option>
+                                <option value="37.5857,-79.0514">Amherst, VA</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>State & Zip</label>
+                            <input type="text" id="cfg-state-zip" placeholder="State & Zip (e.g. VA 22181)" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>Manual Latitude (Override)</label>
+                            <input type="text" id="cfg-lat" placeholder="38.8821" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>Manual Longitude (Override)</label>
+                            <input type="text" id="cfg-lng" placeholder="-77.2754" autocomplete="off">
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-save-setup" id="btn-save" onclick="applySetup()">💾 SAVE LOCATION & LOAD MAP</button>
+                </form>
+            </div>
+        </div>
         
-        <!-- HOME / DRIVER VIEW -->
-        <div id="driver-view" class="view-panel">
-            
+        <!-- DRIVER VIEW -->
+        <div id="driver-view" class="view-panel hidden">
             <div class="glass-card">
                 <div class="driver-header">
                     <div class="main-title">TACNET SCHOOL</div>
-                    <div class="creator-text">Creator: Earl A. Wood (Retired Deputy Sheriff)</div>
-                    <div class="patent-text">PATENT PENDING</div>
-                    <div class="disclaimer-text">LEGAL DISCLAIMER: Proprietary Emergency Safety System. Unauthorized duplication or distribution strictly prohibited.</div>
-                </div>
-
-                <div class="safety-banner-large">
-                    ⚠️ WATCH YOUR SURROUNDINGS AND DRIVE SAFELY
+                    <div class="school-title-sub" id="driver-school-display">UNCONFIGURED</div>
+                    <div class="school-address-sub" id="driver-address-display">Location Unconfigured</div>
                 </div>
             </div>
 
             <div class="glass-card">
-                <p style="color: #00f0ff; font-size: 14px; font-weight: bold; margin-bottom: 6px;">SELECT CURRENT ACTIVE DRIVER UNIT:</p>
-                <select id="select-active-driver-slot" class="select-driver-slot" onchange="changeActiveDriverSlot()"></select>
-
-                <div class="bus-status-title" id="driver-bus-title">Slot #1 (Unassigned)</div>
-                <div class="bus-status-sub" id="driver-name-sub">Driver: Unassigned</div>
+                <label style="color: #00f0ff; font-weight: bold;">ACTIVE DRIVER UNIT:</label>
+                <select id="select-active-driver-slot" class="select-driver-slot" onchange="syncDriverView()"></select>
+                <div style="font-size: 26px; font-weight: 900; color: #00f0ff;" id="driver-bus-title">Slot #1</div>
+                <div style="font-size: 18px; color: #fff;" id="driver-name-sub">Driver: Unassigned</div>
 
                 <div class="grid-buttons">
-                    <button class="btn-large btn-green" onclick="setDriverStatus('GREEN')">GREEN<br><small style="font-size:14px;">Normal Operation</small></button>
-                    <button class="btn-large btn-yellow" onclick="setDriverStatus('YELLOW')">YELLOW<br><small style="font-size:14px;">Schedule Delay</small></button>
-                    <button class="btn-large btn-orange" onmousedown="holdOrange()" onmouseup="releaseOrange()" ontouchstart="holdOrange()" ontouchend="releaseOrange()">🎙️ ORANGE<br><small style="font-size:14px;">Hold to Talk</small></button>
-                    
-                    <button id="btn-red-emergency" class="btn-large btn-red" 
-                            onmousedown="startRedHold()" onmouseup="cancelRedHold()" onmouseleave="cancelRedHold()"
-                            ontouchstart="startRedHold()" ontouchend="cancelRedHold()">
-                        <span id="red-btn-label">🚨 RED EMERGENCY</span><br>
-                        <small id="red-btn-sub" style="font-size:14px;">HOLD FOR 5 SECONDS TO BROADCAST</small>
-                    </button>
+                    <button class="btn-large btn-green">GREEN</button>
+                    <button class="btn-large btn-yellow">YELLOW</button>
+                    <button class="btn-large btn-orange">ORANGE</button>
+                    <button class="btn-large btn-red">🚨 RED EMERGENCY</button>
                 </div>
             </div>
-
-            <div class="glass-card">
-                <div style="font-size: 18px; font-weight: 700; color: #94a3b8;">DISPATCH INTERCOM FEED:</div>
-                <div id="driver-reply" class="feed-display">"Channel Ready"</div>
-            </div>
-
         </div>
 
-        <!-- SCHOOL COMMAND MONITOR VIEW -->
+        <!-- COMMAND MONITOR VIEW -->
         <div id="command-view" class="view-panel hidden">
             <div class="sidebar">
-                
                 <div class="panel-glass">
-                    <p style="color: #00f0ff; font-weight: bold; font-size: 16px;">✏️ ASSIGN OR CLEAR BUS & DRIVER</p>
+                    <p style="color: #00f0ff; font-weight: bold;">✏️ ASSIGN BUS & DRIVER</p>
                     <div class="input-row">
-                        <select id="select-slot" onchange="loadSlotData()"></select>
+                        <select id="select-slot" onchange="populateInputs()"></select>
                     </div>
                     <div class="input-row">
-                        <input type="text" id="input-bus-num" placeholder="Bus # (e.g. 133)">
-                        <input type="text" id="input-driver-name" placeholder="Driver Name">
+                        <input type="text" id="input-bus-num" placeholder="Bus #" autocomplete="off">
+                        <input type="text" id="input-driver-name" placeholder="Driver Name" autocomplete="off">
                     </div>
                     <div class="btn-group-row">
-                        <button class="action-btn" onclick="saveSlotData()">💾 Save Info</button>
-                        <button class="erase-btn" onclick="clearSlotData()">🗑️ Erase Info</button>
+                        <button class="action-btn" onclick="saveSlot()">💾 Save Unit</button>
+                        <button class="erase-btn" onclick="clearSlot()">🗑️ Clear</button>
                     </div>
                 </div>
 
-                <div class="panel-glass" style="background: rgba(249, 115, 22, 0.15);">
-                    <p style="color: #f97316; font-weight: bold; font-size: 16px;">🎙️ DISPATCH TALK BACK (ORANGE)</p>
-                    <div class="input-row">
-                        <select id="select-talk-slot"></select>
-                    </div>
-                    <div class="input-row">
-                        <input type="text" id="input-msg" value="Copy that, proceed with caution.">
-                    </div>
-                    <button class="intercom-btn" onclick="transmitToDriver()">🎙️ TRANSMIT TO DRIVER</button>
-                </div>
-
-                <!-- END OF DAY REPORT & RESET -->
-                <div class="panel-glass">
-                    <button class="report-btn" onclick="openEndOfDayReport()">📊 GENERATE END-OF-DAY REPORT</button>
-                    <button class="reset-all-btn" onclick="resetAllBuses()">🔄 CLEAR ALL FLEET ALERTS</button>
-                </div>
-
-                <div style="font-size: 18px; font-weight: bold; color: #00f0ff;">Active Bus Fleet (20 Slots)</div>
+                <div style="font-size: 16px; font-weight: bold; color: #00f0ff;">Active Fleet Units</div>
                 <div class="bus-list" id="bus-list"></div>
             </div>
 
             <div class="map-box">
-                <div id="emergency-alert-bar">🚨 RED EMERGENCY ALERT ACTIVE ON FLEET MAP</div>
                 <div id="map"></div>
             </div>
         </div>
 
     </div>
 
-    <!-- REPORT MODAL -->
-    <div id="report-modal" class="modal-overlay hidden">
-        <div class="report-card">
-            <div class="report-header-print">
-                <div>
-                    <h1 style="font-size: 26px; color: #0f172a;">TACNET SCHOOL - END OF DAY REPORT</h1>
-                    <p style="color: #475569; font-size: 14px; font-weight: bold;">Creator: Earl A. Wood (Retired Deputy Sheriff)</p>
-                    <p style="color: #64748b; font-size: 12px;">Patent Pending & Legal Disclaimer: Proprietary Safety System</p>
-                </div>
-                <div style="text-align: right;">
-                    <p id="report-date-time" style="font-size: 14px; font-weight: bold; color: #0f172a;"></p>
-                    <p style="font-size: 12px; color: #64748b;">Status: Shift Complete</p>
-                </div>
-            </div>
-
-            <h3 style="margin-top: 15px; color: #0f172a;">1. Active Fleet Summary</h3>
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th>Slot / Bus #</th>
-                        <th>Assigned Driver</th>
-                        <th>Final Shift Status</th>
-                        <th>Last Intercom Message</th>
-                    </tr>
-                </thead>
-                <tbody id="report-fleet-tbody"></tbody>
-            </table>
-
-            <h3 style="margin-top: 25px; color: #0f172a;">2. Itemized Timestamped Event Log</h3>
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Bus / Slot</th>
-                        <th>Driver</th>
-                        <th>Event Type</th>
-                        <th>Details / Description</th>
-                    </tr>
-                </thead>
-                <tbody id="report-log-tbody"></tbody>
-            </table>
-
-            <div class="report-actions">
-                <button class="btn-modal" style="background: #e2e8f0; color: #000;" onclick="closeEndOfDayReport()">Close</button>
-                <button class="btn-modal" style="background: #f97316; color: #fff;" onclick="emailReport()">✉️ Email Report</button>
-                <button class="btn-modal" style="background: #0284c7; color: #fff;" onclick="window.print()">🖨️ Print / Save PDF</button>
-            </div>
-        </div>
-    </div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        let SCHOOL_CONFIG = {
+            district: "",
+            school: "",
+            address: "",
+            city: "",
+            state_zip: "",
+            lat: 38.8821,
+            lng: -77.2754
+        };
+
         let map = null;
         let busMarkers = {};
         let fleet = [];
-        let activityLog = [];
-        let currentActiveDriverSlot = 0;
 
-        let redHoldTimer = null;
-        let redCountdownInterval = null;
-        let redHoldTimeLeft = 5;
-
-        const baseLat = 37.5815;
-        const baseLng = -79.0506;
-
-        for (let i = 1; i <= 20; i++) {
-            fleet.push({
-                slot: i,
-                id: '',
-                driver: '',
-                status: 'GREEN',
-                lastMessage: '"Channel Ready"',
-                lat: baseLat + (Math.random() - 0.5) * 0.06,
-                lng: baseLng + (Math.random() - 0.5) * 0.06
-            });
+        function applyPresetCoordinates() {
+            let val = document.getElementById('cfg-preset').value.split(',');
+            document.getElementById('cfg-lat').value = val[0];
+            document.getElementById('cfg-lng').value = val[1];
         }
 
-        function logEvent(slot, eventType, details) {
-            let bus = fleet.find(b => b.slot == slot);
-            let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            activityLog.unshift({
-                timestamp: timeStr,
-                busNum: bus.id ? `Bus #${bus.id}` : `Slot #${bus.slot}`,
-                driver: bus.driver || 'Unassigned',
-                eventType: eventType,
-                details: details
-            });
-        }
+        function applySetup() {
+            SCHOOL_CONFIG.district = document.getElementById('cfg-district').value.trim() || "District Unspecified";
+            SCHOOL_CONFIG.school = document.getElementById('cfg-school').value.trim() || "School Campus";
+            SCHOOL_CONFIG.address = document.getElementById('cfg-address').value.trim() || "";
+            SCHOOL_CONFIG.state_zip = document.getElementById('cfg-state-zip').value.trim() || "";
 
-        function showView(viewName) {
-            const driverView = document.getElementById('driver-view');
-            const commandView = document.getElementById('command-view');
-            const tabDriver = document.getElementById('tab-driver');
-            const tabCommand = document.getElementById('tab-command');
+            let manualLat = parseFloat(document.getElementById('cfg-lat').value);
+            let manualLng = parseFloat(document.getElementById('cfg-lng').value);
 
-            if (viewName === 'driver') {
-                driverView.classList.remove('hidden');
-                commandView.classList.add('hidden');
-                tabDriver.classList.add('active');
-                tabCommand.classList.remove('active');
-                updateDriverUIDisplay();
+            if (!isNaN(manualLat) && !isNaN(manualLng)) {
+                SCHOOL_CONFIG.lat = manualLat;
+                SCHOOL_CONFIG.lng = manualLng;
             } else {
-                driverView.classList.add('hidden');
-                commandView.classList.remove('hidden');
-                tabCommand.classList.add('active');
-                tabDriver.classList.remove('active');
-
-                if (!map) {
-                    initMapSystem();
-                } else {
-                    setTimeout(() => { map.invalidateSize(); }, 100);
-                }
-            }
-        }
-
-        function initMapSystem() {
-            map = L.map('map').setView([baseLat, baseLng], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-            fleet.forEach(bus => {
-                createOrUpdateMarker(bus);
-            });
-
-            renderSidebarList();
-            setTimeout(() => { map.invalidateSize(); }, 200);
-        }
-
-        function getBusTitle(bus) {
-            let label = bus.id ? `Bus #${bus.id}` : `Slot #${bus.slot}`;
-            if (bus.driver) {
-                label += ` - ${bus.driver}`;
-            }
-            return label;
-        }
-
-        function createOrUpdateMarker(bus) {
-            if (busMarkers[bus.slot]) {
-                map.removeLayer(busMarkers[bus.slot]);
+                let presetVal = document.getElementById('cfg-preset').value.split(',');
+                SCHOOL_CONFIG.lat = parseFloat(presetVal[0]);
+                SCHOOL_CONFIG.lng = parseFloat(presetVal[1]);
             }
 
-            let marker;
-            let title = getBusTitle(bus);
+            updateApp();
+            showView('command');
+        }
 
-            if (bus.status === 'RED') {
-                let redIcon = L.divIcon({
-                    className: 'flashing-red-icon',
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 12]
+        function updateApp() {
+            document.getElementById('header-district-name').innerText = (SCHOOL_CONFIG.district || "TACNET SCHOOL SYSTEM").toUpperCase();
+            document.getElementById('driver-school-display').innerText = SCHOOL_CONFIG.school ? `${SCHOOL_CONFIG.school} - ${SCHOOL_CONFIG.district}` : "UNCONFIGURED";
+            document.getElementById('driver-address-display').innerText = SCHOOL_CONFIG.address ? `${SCHOOL_CONFIG.address}, ${SCHOOL_CONFIG.state_zip}` : "Location Unconfigured";
+
+            // Re-center fleet around new lat/lng coordinates
+            fleet = [];
+            for (let i = 1; i <= 20; i++) {
+                fleet.push({
+                    slot: i,
+                    id: '',
+                    driver: '',
+                    status: 'GREEN',
+                    lat: SCHOOL_CONFIG.lat + (Math.random() - 0.5) * 0.02,
+                    lng: SCHOOL_CONFIG.lng + (Math.random() - 0.5) * 0.02
                 });
-                marker = L.marker([bus.lat, bus.lng], { icon: redIcon }).addTo(map);
-                marker.bindPopup(`<b style="color:red; font-size:16px;">🚨 ${title} - EMERGENCY</b><br>Immediate Assistance Requested!`);
-            } else {
-                marker = L.circleMarker([bus.lat, bus.lng], {
-                    radius: 10,
-                    fillColor: getColor(bus.status),
-                    color: '#ffffff',
-                    weight: 2,
-                    fillOpacity: 0.95
-                }).addTo(map);
-                marker.bindPopup(`<b>${title}</b><br>Status: ${bus.status}`);
             }
 
-            busMarkers[bus.slot] = marker;
-        }
+            renderDropdowns();
+            renderSidebar();
+            populateInputs();
+            syncDriverView();
 
-        function getColor(status) {
-            if (status === 'YELLOW') return '#ca8a04';
-            if (status === 'ORANGE') return '#ea580c';
-            if (status === 'RED') return '#dc2626';
-            return '#16a34a';
+            if (map) {
+                map.setView([SCHOOL_CONFIG.lat, SCHOOL_CONFIG.lng], 14);
+                fleet.forEach(b => drawMarker(b));
+            }
         }
 
         function renderDropdowns() {
-            const selSlot = document.getElementById('select-slot');
-            const selTalk = document.getElementById('select-talk-slot');
-            const selDriverSlot = document.getElementById('select-active-driver-slot');
-
-            let html = fleet.map((b, idx) => `<option value="${idx}">${getBusTitle(b)}</option>`).join('');
-            
-            selSlot.innerHTML = html;
-            selTalk.innerHTML = html;
-            selDriverSlot.innerHTML = html;
-
-            selSlot.value = currentActiveDriverSlot;
-            selTalk.value = currentActiveDriverSlot;
-            selDriverSlot.value = currentActiveDriverSlot;
+            let options = fleet.map((b, i) => `<option value="${i}">${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot} ${b.driver ? '(' + b.driver + ')' : ''}</option>`).join('');
+            document.getElementById('select-slot').innerHTML = options;
+            document.getElementById('select-active-driver-slot').innerHTML = options;
         }
 
-        function changeActiveDriverSlot() {
-            currentActiveDriverSlot = parseInt(document.getElementById('select-active-driver-slot').value);
-            updateDriverUIDisplay();
+        function populateInputs() {
+            let i = parseInt(document.getElementById('select-slot').value) || 0;
+            document.getElementById('input-bus-num').value = fleet[i].id;
+            document.getElementById('input-driver-name').value = fleet[i].driver;
         }
 
-        function loadSlotData() {
-            let idx = document.getElementById('select-slot').value;
-            document.getElementById('input-bus-num').value = fleet[idx].id;
-            document.getElementById('input-driver-name').value = fleet[idx].driver;
-        }
-
-        function saveSlotData() {
-            let idx = parseInt(document.getElementById('select-slot').value);
-            fleet[idx].id = document.getElementById('input-bus-num').value.trim();
-            fleet[idx].driver = document.getElementById('input-driver-name').value.trim();
+        function saveSlot() {
+            let i = parseInt(document.getElementById('select-slot').value);
+            fleet[i].id = document.getElementById('input-bus-num').value.trim();
+            fleet[i].driver = document.getElementById('input-driver-name').value.trim();
 
             renderDropdowns();
-            document.getElementById('select-slot').value = idx;
-            document.getElementById('select-talk-slot').value = idx;
-            document.getElementById('select-active-driver-slot').value = idx;
-
-            currentActiveDriverSlot = idx;
-            logEvent(fleet[idx].slot, 'ASSIGNMENT', `Assigned Bus #${fleet[idx].id} to Driver ${fleet[idx].driver}`);
-
-            updateDriverUIDisplay();
-            updateMapDisplay();
+            document.getElementById('select-slot').value = i;
+            renderSidebar();
+            syncDriverView();
+            if (map) drawMarker(fleet[i]);
         }
 
-        function clearSlotData() {
-            let idx = parseInt(document.getElementById('select-slot').value);
-            let oldBus = fleet[idx].id;
-            let oldDriver = fleet[idx].driver;
-
-            fleet[idx].id = '';
-            fleet[idx].driver = '';
+        function clearSlot() {
+            let i = parseInt(document.getElementById('select-slot').value);
+            fleet[i].id = '';
+            fleet[i].driver = '';
             document.getElementById('input-bus-num').value = '';
             document.getElementById('input-driver-name').value = '';
 
             renderDropdowns();
-            document.getElementById('select-slot').value = idx;
-            document.getElementById('select-talk-slot').value = idx;
-            document.getElementById('select-active-driver-slot').value = idx;
-
-            logEvent(fleet[idx].slot, 'UNASSIGNED', `Cleared Bus #${oldBus || 'N/A'} and Driver ${oldDriver || 'N/A'}`);
-
-            updateDriverUIDisplay();
-            updateMapDisplay();
+            document.getElementById('select-slot').value = i;
+            renderSidebar();
+            syncDriverView();
+            if (map) drawMarker(fleet[i]);
         }
 
-        function updateDriverUIDisplay() {
-            let activeBus = fleet[currentActiveDriverSlot];
-            document.getElementById('driver-bus-title').innerText = activeBus.id ? `Bus #${activeBus.id}` : `Slot #${activeBus.slot} (Unassigned)`;
-            document.getElementById('driver-name-sub').innerText = activeBus.driver ? `Driver: ${activeBus.driver}` : `Driver: Unassigned`;
-            document.getElementById('driver-reply').innerText = activeBus.lastMessage;
-
-            const redBtn = document.getElementById('btn-red-emergency');
-            const redLabel = document.getElementById('red-btn-label');
-            const redSub = document.getElementById('red-btn-sub');
-
-            if (activeBus.status === 'RED') {
-                redBtn.classList.add('active-emergency');
-                redLabel.innerText = "🚨 EMERGENCY ALERT TRANSMITTED 🚨";
-                redSub.innerText = "COMMAND NOTIFIED - FLASHING ALERT ACTIVE";
-            } else {
-                redBtn.classList.remove('active-emergency');
-                redLabel.innerText = "🚨 RED EMERGENCY";
-                redSub.innerText = "HOLD FOR 5 SECONDS TO BROADCAST";
-            }
+        function syncDriverView() {
+            let i = parseInt(document.getElementById('select-active-driver-slot').value) || 0;
+            document.getElementById('driver-bus-title').innerText = fleet[i].id ? `Bus #${fleet[i].id}` : `Slot #${fleet[i].slot}`;
+            document.getElementById('driver-name-sub').innerText = fleet[i].driver ? `Driver: ${fleet[i].driver}` : `Driver: Unassigned`;
         }
 
-        function updateMapDisplay() {
-            let hasRed = false;
-
-            fleet.forEach(bus => {
-                createOrUpdateMarker(bus);
-                if (bus.status === 'RED') hasRed = true;
-            });
-
-            const alertBar = document.getElementById('emergency-alert-bar');
-            if (alertBar) {
-                alertBar.style.display = hasRed ? 'block' : 'none';
-            }
-
-            renderSidebarList();
-        }
-
-        function setDriverStatus(status) {
-            let activeBus = fleet[currentActiveDriverSlot];
-            activeBus.status = status;
-
-            if (status === 'RED') {
-                activeBus.lastMessage = "🚨 RED EMERGENCY ALERT BROADCASTED TO SCHOOL COMMAND!";
-                logEvent(activeBus.slot, 'EMERGENCY RED', '🚨 5-Second Trigger Completed. Emergency Broadcast Sent!');
-            } else if (status === 'GREEN') {
-                activeBus.lastMessage = "Channel Ready";
-                logEvent(activeBus.slot, 'STATUS GREEN', 'Returned to Normal Operation');
-            } else if (status === 'YELLOW') {
-                activeBus.lastMessage = "Schedule Delay Reported";
-                logEvent(activeBus.slot, 'STATUS YELLOW', 'Reported Schedule Delay');
-            }
-
-            updateDriverUIDisplay();
-            updateMapDisplay();
-        }
-
-        function startRedHold() {
-            let activeBus = fleet[currentActiveDriverSlot];
-            if (activeBus.status === 'RED') return;
-
-            redHoldTimeLeft = 5;
-            const redLabel = document.getElementById('red-btn-label');
-            const redSub = document.getElementById('red-btn-sub');
-
-            redLabel.innerText = "⚠️ HOLDING FOR EMERGENCY...";
-            redSub.innerText = `ACTIVATING IN ${redHoldTimeLeft} SECONDS...`;
-
-            redCountdownInterval = setInterval(() => {
-                redHoldTimeLeft--;
-                if (redHoldTimeLeft > 0) {
-                    redSub.innerText = `ACTIVATING IN ${redHoldTimeLeft} SECONDS...`;
-                }
-            }, 1000);
-
-            redHoldTimer = setTimeout(() => {
-                clearInterval(redCountdownInterval);
-                setDriverStatus('RED');
-            }, 5000);
-        }
-
-        function cancelRedHold() {
-            let activeBus = fleet[currentActiveDriverSlot];
-            if (activeBus.status === 'RED') return;
-
-            if (redHoldTimer) clearTimeout(redHoldTimer);
-            if (redCountdownInterval) clearInterval(redCountdownInterval);
-
-            redHoldTimer = null;
-            redCountdownInterval = null;
-
-            updateDriverUIDisplay();
-        }
-
-        function holdOrange() {
-            let activeBus = fleet[currentActiveDriverSlot];
-            if (activeBus.status !== 'RED') {
-                setDriverStatus('ORANGE');
-                activeBus.lastMessage = "🎙️ DRIVER TRANSMITTING...";
-                logEvent(activeBus.slot, 'INTERCOM DRIVER', 'Driver holding talk button');
-                updateDriverUIDisplay();
-            }
-        }
-
-        function releaseOrange() {
-            let activeBus = fleet[currentActiveDriverSlot];
-            if (activeBus.status === 'ORANGE') {
-                activeBus.lastMessage = "Office Reply: Transmitted to Dispatch";
-                updateDriverUIDisplay();
-                setTimeout(() => { 
-                    if (activeBus.status !== 'RED') {
-                        setDriverStatus('GREEN'); 
-                    }
-                }, 3000);
-            }
-        }
-
-        function transmitToDriver() {
-            let idx = parseInt(document.getElementById('select-talk-slot').value);
-            let msg = document.getElementById('input-msg').value;
-
-            let targetBus = fleet[idx];
-            let prevStatus = targetBus.status;
-            
-            targetBus.status = 'ORANGE';
-            targetBus.lastMessage = `📢 OFFICE: "${msg}"`;
-            logEvent(targetBus.slot, 'INTERCOM DISPATCH', `Dispatch transmitted: "${msg}"`);
-
-            updateDriverUIDisplay();
-            updateMapDisplay();
-
-            setTimeout(() => {
-                targetBus.status = prevStatus === 'RED' ? 'RED' : 'GREEN';
-                updateDriverUIDisplay();
-                updateMapDisplay();
-            }, 4000);
-        }
-
-        function resetBusStatus(slot) {
-            let bus = fleet.find(b => b.slot == slot);
-            if (bus) {
-                bus.status = 'GREEN';
-                bus.lastMessage = "Channel Ready";
-                logEvent(bus.slot, 'RESET', 'Individual alert cleared by Command');
-                updateDriverUIDisplay();
-                updateMapDisplay();
-            }
-        }
-
-        function resetAllBuses() {
-            fleet.forEach(b => {
-                b.status = 'GREEN';
-                b.lastMessage = "Channel Ready";
-            });
-            logEvent('ALL', 'MASTER RESET', 'Command cleared all active alerts across fleet');
-            updateDriverUIDisplay();
-            updateMapDisplay();
-        }
-
-        function renderSidebarList() {
-            const list = document.getElementById('bus-list');
-            if (!list) return;
-
-            list.innerHTML = fleet.map(b => `
+        function renderSidebar() {
+            document.getElementById('bus-list').innerHTML = fleet.map(b => `
                 <div class="bus-item">
-                    <div style="cursor:pointer;" onclick="focusOnBus(${b.slot})">
-                        <div style="font-size:15px; font-weight:800;">${getBusTitle(b)}</div>
-                        <span class="badge badge-${b.status}">${b.status === 'RED' ? '🚨 RED EMERGENCY' : b.status}</span>
-                    </div>
-                    <button class="btn-bus-reset" onclick="resetBusStatus(${b.slot})">RESET</button>
+                    <div><b>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</b> (${b.driver || 'Unassigned'})</div>
+                    <span class="badge badge-GREEN">${b.status}</span>
                 </div>
             `).join('');
         }
 
-        function focusOnBus(slot) {
-            let bus = fleet.find(b => b.slot == slot);
-            if (bus && map) {
-                map.setView([bus.lat, bus.lng], 14);
-                busMarkers[slot].openPopup();
+        function showView(view) {
+            document.getElementById('setup-view').classList.toggle('hidden', view !== 'setup');
+            document.getElementById('driver-view').classList.toggle('hidden', view !== 'driver');
+            document.getElementById('command-view').classList.toggle('hidden', view !== 'command');
+
+            document.getElementById('tab-setup').classList.toggle('active', view === 'setup');
+            document.getElementById('tab-driver').classList.toggle('active', view === 'driver');
+            document.getElementById('tab-command').classList.toggle('active', view === 'command');
+
+            if (view === 'command') {
+                setTimeout(() => {
+                    if (!map) {
+                        map = L.map('map').setView([SCHOOL_CONFIG.lat, SCHOOL_CONFIG.lng], 14);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                    }
+                    map.invalidateSize();
+                    map.setView([SCHOOL_CONFIG.lat, SCHOOL_CONFIG.lng], 14);
+                    fleet.forEach(b => drawMarker(b));
+                }, 150);
             }
         }
 
-        /* END OF DAY REPORT GENERATION */
-        function openEndOfDayReport() {
-            const modal = document.getElementById('report-modal');
-            const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            document.getElementById('report-date-time').innerText = dateStr;
-
-            const fleetTbody = document.getElementById('report-fleet-tbody');
-            fleetTbody.innerHTML = fleet.map(b => `
-                <tr>
-                    <td><b>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</b></td>
-                    <td>${b.driver || 'Unassigned'}</td>
-                    <td><b style="color:${b.status === 'RED' ? '#dc2626' : (b.status === 'YELLOW' ? '#ca8a04' : '#16a34a')}">${b.status}</b></td>
-                    <td>${b.lastMessage}</td>
-                </tr>
-            `).join('');
-
-            const logTbody = document.getElementById('report-log-tbody');
-            if (activityLog.length === 0) {
-                logTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">No security events logged for this shift.</td></tr>`;
-            } else {
-                logTbody.innerHTML = activityLog.map(log => `
-                    <tr>
-                        <td>${log.timestamp}</td>
-                        <td>${log.busNum}</td>
-                        <td>${log.driver}</td>
-                        <td><b>${log.eventType}</b></td>
-                        <td>${log.details}</td>
-                    </tr>
-                `).join('');
-            }
-
-            modal.classList.remove('hidden');
+        function drawMarker(b) {
+            if (busMarkers[b.slot]) map.removeLayer(busMarkers[b.slot]);
+            let text = b.id ? `Bus #${b.id}` : `Slot #${b.slot}`;
+            let marker = L.circleMarker([b.lat, b.lng], {
+                radius: 10,
+                fillColor: '#16a34a',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 0.9
+            }).addTo(map);
+            marker.bindPopup(`<b>${text}</b><br>Driver: ${b.driver || 'Unassigned'}`);
+            busMarkers[b.slot] = marker;
         }
 
-        function closeEndOfDayReport() {
-            document.getElementById('report-modal').classList.add('hidden');
-        }
-
-        function emailReport() {
-            const dateStr = new Date().toLocaleDateString();
-            const subject = encodeURIComponent(`TACNET SCHOOL - End of Day Shift Report (${dateStr})`);
-            let bodyText = `TACNET SCHOOL SHIFT REPORT - ${dateStr}%0D%0A`;
-            bodyText += `Creator: Earl A. Wood (Retired Deputy Sheriff)%0D%0A`;
-            bodyText += `--------------------------------------------------%0D%0A%0D%0A`;
-            bodyText += `ACTIVE FLEET SUMMARY:%0D%0A`;
-            
-            fleet.forEach(b => {
-                bodyText += `- ${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot} | Driver: ${b.driver || 'Unassigned'} | Status: ${b.status}%0D%0A`;
-            });
-
-            bodyText += `%0D%0ATIMESTAMPED LOG HIGHLIGHTS:%0D%0A`;
-            activityLog.slice(0, 10).forEach(log => {
-                bodyText += `[${log.timestamp}] ${log.busNum} (${log.driver}) - ${log.eventType}: ${log.details}%0D%0A`;
-            });
-
-            window.location.href = `mailto:?subject=${subject}&body=${bodyText}`;
-        }
-
-        window.onload = () => {
-            renderDropdowns();
-            loadSlotData();
-            updateDriverUIDisplay();
+        window.onload = function() {
+            applyPresetCoordinates();
+            updateApp();
         };
     </script>
 </body>
