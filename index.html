@@ -9,7 +9,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
         body { background: #021078; color: #ffffff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* RESTORED HEADER & BANNER */
+        /* RESTORED BRANDING HEADER & BANNER */
         header { 
             background: #010a4a; 
             padding: 8px 15px; 
@@ -290,7 +290,6 @@
             let title = bus.id ? 'Bus #' + bus.id : 'Slot #' + bus.slot;
 
             if (bus.status === 'RED') {
-                // Animated HTML DivIcon for Flashing Red Alert
                 let redIcon = L.divIcon({
                     className: 'flashing-red-icon',
                     iconSize: [22, 22],
@@ -299,7 +298,6 @@
                 marker = L.marker([bus.lat, bus.lng], { icon: redIcon }).addTo(map);
                 marker.bindPopup(`<b style="color:red;">🚨 ${title} - EMERGENCY</b><br>Immediate Assistance Requested!`);
             } else {
-                // Standard Circle Markers for Normal / Delays
                 marker = L.circleMarker([bus.lat, bus.lng], {
                     radius: 9,
                     fillColor: getColor(bus.status),
@@ -412,7 +410,6 @@
             }, 4000);
         }
 
-        // RESET SPECIFIC BUS FROM SCHOOL SIDE
         function resetBusStatus(slot) {
             let bus = fleet.find(b => b.slot == slot);
             if (bus) {
@@ -424,7 +421,6 @@
             }
         }
 
-        // MASTER RESET FOR ALL BUSES FROM SCHOOL SIDE
         function resetAllBuses() {
             fleet.forEach(b => b.status = 'GREEN');
             document.getElementById('driver-reply').innerText = "Channel Ready";
