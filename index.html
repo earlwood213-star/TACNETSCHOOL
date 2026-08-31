@@ -258,6 +258,19 @@
             margin-top: 8px; 
         }
 
+        .report-btn {
+            background: #10b981;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
         .reset-all-btn { 
             background: #ef4444; 
             color: #ffffff; 
@@ -268,6 +281,7 @@
             font-weight: 800; 
             cursor: pointer; 
             width: 100%; 
+            margin-top: 8px;
         }
 
         .bus-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
@@ -333,6 +347,79 @@
             70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
+
+        /* REPORT MODAL & PRINT STYLES */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .report-card {
+            background: #ffffff;
+            color: #000000;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            border-radius: 12px;
+            padding: 30px;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .report-header-print {
+            border-bottom: 3px solid #000;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .report-table th, .report-table td {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .report-table th {
+            background: #f1f5f9;
+            font-weight: bold;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        .btn-modal {
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            .report-card, .report-card * { visibility: visible; }
+            .report-card { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; box-shadow: none; }
+            .report-actions { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -372,7 +459,6 @@
                     <button class="btn-large btn-yellow" onclick="setDriverStatus('YELLOW')">YELLOW<br><small style="font-size:14px;">Schedule Delay</small></button>
                     <button class="btn-large btn-orange" onmousedown="holdOrange()" onmouseup="releaseOrange()" ontouchstart="holdOrange()" ontouchend="releaseOrange()">🎙️ ORANGE<br><small style="font-size:14px;">Hold to Talk</small></button>
                     
-                    <!-- 5 SECOND HOLD RED EMERGENCY BUTTON -->
                     <button id="btn-red-emergency" class="btn-large btn-red" 
                             onmousedown="startRedHold()" onmouseup="cancelRedHold()" onmouseleave="cancelRedHold()"
                             ontouchstart="startRedHold()" ontouchend="cancelRedHold()">
@@ -393,7 +479,6 @@
         <div id="command-view" class="view-panel hidden">
             <div class="sidebar">
                 
-                <!-- ASSIGN BUS NUMBER AND DRIVER NAME -->
                 <div class="panel-glass">
                     <p style="color: #00f0ff; font-weight: bold; font-size: 16px;">✏️ ASSIGN BUS & DRIVER INFO</p>
                     <div class="input-row">
@@ -406,7 +491,6 @@
                     <button class="action-btn" onclick="saveSlotData()">Save Bus & Driver Info</button>
                 </div>
 
-                <!-- DISPATCH TALK BACK -->
                 <div class="panel-glass" style="background: rgba(249, 115, 22, 0.15);">
                     <p style="color: #f97316; font-weight: bold; font-size: 16px;">🎙️ DISPATCH TALK BACK (ORANGE)</p>
                     <div class="input-row">
@@ -418,8 +502,9 @@
                     <button class="intercom-btn" onclick="transmitToDriver()">🎙️ TRANSMIT TO DRIVER</button>
                 </div>
 
-                <!-- MASTER RESET BUTTON -->
+                <!-- END OF DAY REPORT & RESET -->
                 <div class="panel-glass">
+                    <button class="report-btn" onclick="openEndOfDayReport()">📊 GENERATE END-OF-DAY REPORT</button>
                     <button class="reset-all-btn" onclick="resetAllBuses()">🔄 CLEAR ALL FLEET ALERTS</button>
                 </div>
 
@@ -435,12 +520,63 @@
 
     </div>
 
+    <!-- REPORT MODAL -->
+    <div id="report-modal" class="modal-overlay hidden">
+        <div class="report-card">
+            <div class="report-header-print">
+                <div>
+                    <h1 style="font-size: 26px; color: #0f172a;">TACNET SCHOOL - END OF DAY REPORT</h1>
+                    <p style="color: #475569; font-size: 14px; font-weight: bold;">Creator: Earl A. Wood (Retired Deputy Sheriff)</p>
+                    <p style="color: #64748b; font-size: 12px;">Patent Pending & Legal Disclaimer: Proprietary Safety System</p>
+                </div>
+                <div style="text-align: right;">
+                    <p id="report-date-time" style="font-size: 14px; font-weight: bold; color: #0f172a;"></p>
+                    <p style="font-size: 12px; color: #64748b;">Status: Shift Complete</p>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 15px; color: #0f172a;">1. Active Fleet Summary</h3>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Slot / Bus #</th>
+                        <th>Assigned Driver</th>
+                        <th>Final Shift Status</th>
+                        <th>Last Intercom Message</th>
+                    </tr>
+                </thead>
+                <tbody id="report-fleet-tbody"></tbody>
+            </table>
+
+            <h3 style="margin-top: 25px; color: #0f172a;">2. Itemized Timestamped Event Log</h3>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Bus / Slot</th>
+                        <th>Driver</th>
+                        <th>Event Type</th>
+                        <th>Details / Description</th>
+                    </tr>
+                </thead>
+                <tbody id="report-log-tbody"></tbody>
+            </table>
+
+            <div class="report-actions">
+                <button class="btn-modal" style="background: #e2e8f0; color: #000;" onclick="closeEndOfDayReport()">Close</button>
+                <button class="btn-modal" style="background: #f97316; color: #fff;" onclick="emailReport()">✉️ Email Report</button>
+                <button class="btn-modal" style="background: #0284c7; color: #fff;" onclick="window.print()">🖨️ Print / Save PDF</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map = null;
         let busMarkers = {};
         let fleet = [];
-        let currentActiveDriverSlot = 0; // Index 0-19
+        let activityLog = [];
+        let currentActiveDriverSlot = 0;
 
         let redHoldTimer = null;
         let redCountdownInterval = null;
@@ -458,6 +594,18 @@
                 lastMessage: '"Channel Ready"',
                 lat: baseLat + (Math.random() - 0.5) * 0.06,
                 lng: baseLng + (Math.random() - 0.5) * 0.06
+            });
+        }
+
+        function logEvent(slot, eventType, details) {
+            let bus = fleet.find(b => b.slot == slot);
+            let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            activityLog.unshift({
+                timestamp: timeStr,
+                busNum: bus.id ? `Bus #${bus.id}` : `Slot #${bus.slot}`,
+                driver: bus.driver || 'Unassigned',
+                eventType: eventType,
+                details: details
             });
         }
 
@@ -582,7 +730,8 @@
             document.getElementById('select-active-driver-slot').value = idx;
 
             currentActiveDriverSlot = idx;
-            
+            logEvent(fleet[idx].slot, 'ASSIGNMENT', `Assigned Bus #${fleet[idx].id} to Driver ${fleet[idx].driver}`);
+
             updateDriverUIDisplay();
             updateMapDisplay();
         }
@@ -630,18 +779,22 @@
 
             if (status === 'RED') {
                 activeBus.lastMessage = "🚨 RED EMERGENCY ALERT BROADCASTED TO SCHOOL COMMAND!";
+                logEvent(activeBus.slot, 'EMERGENCY RED', '🚨 5-Second Trigger Completed. Emergency Broadcast Sent!');
             } else if (status === 'GREEN') {
                 activeBus.lastMessage = "Channel Ready";
+                logEvent(activeBus.slot, 'STATUS GREEN', 'Returned to Normal Operation');
+            } else if (status === 'YELLOW') {
+                activeBus.lastMessage = "Schedule Delay Reported";
+                logEvent(activeBus.slot, 'STATUS YELLOW', 'Reported Schedule Delay');
             }
 
             updateDriverUIDisplay();
             updateMapDisplay();
         }
 
-        /* 5-SECOND HOLD LOGIC FOR RED EMERGENCY BUTTON */
         function startRedHold() {
             let activeBus = fleet[currentActiveDriverSlot];
-            if (activeBus.status === 'RED') return; // Already active
+            if (activeBus.status === 'RED') return;
 
             redHoldTimeLeft = 5;
             const redLabel = document.getElementById('red-btn-label');
@@ -681,6 +834,7 @@
             if (activeBus.status !== 'RED') {
                 setDriverStatus('ORANGE');
                 activeBus.lastMessage = "🎙️ DRIVER TRANSMITTING...";
+                logEvent(activeBus.slot, 'INTERCOM DRIVER', 'Driver holding talk button');
                 updateDriverUIDisplay();
             }
         }
@@ -707,6 +861,7 @@
             
             targetBus.status = 'ORANGE';
             targetBus.lastMessage = `📢 OFFICE: "${msg}"`;
+            logEvent(targetBus.slot, 'INTERCOM DISPATCH', `Dispatch transmitted: "${msg}"`);
 
             updateDriverUIDisplay();
             updateMapDisplay();
@@ -723,6 +878,7 @@
             if (bus) {
                 bus.status = 'GREEN';
                 bus.lastMessage = "Channel Ready";
+                logEvent(bus.slot, 'RESET', 'Individual alert cleared by Command');
                 updateDriverUIDisplay();
                 updateMapDisplay();
             }
@@ -733,6 +889,7 @@
                 b.status = 'GREEN';
                 b.lastMessage = "Channel Ready";
             });
+            logEvent('ALL', 'MASTER RESET', 'Command cleared all active alerts across fleet');
             updateDriverUIDisplay();
             updateMapDisplay();
         }
@@ -758,6 +915,64 @@
                 map.setView([bus.lat, bus.lng], 14);
                 busMarkers[slot].openPopup();
             }
+        }
+
+        /* END OF DAY REPORT GENERATION */
+        function openEndOfDayReport() {
+            const modal = document.getElementById('report-modal');
+            const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('report-date-time').innerText = dateStr;
+
+            const fleetTbody = document.getElementById('report-fleet-tbody');
+            fleetTbody.innerHTML = fleet.map(b => `
+                <tr>
+                    <td><b>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</b></td>
+                    <td>${b.driver || 'Unassigned'}</td>
+                    <td><b style="color:${b.status === 'RED' ? '#dc2626' : (b.status === 'YELLOW' ? '#ca8a04' : '#16a34a')}">${b.status}</b></td>
+                    <td>${b.lastMessage}</td>
+                </tr>
+            `).join('');
+
+            const logTbody = document.getElementById('report-log-tbody');
+            if (activityLog.length === 0) {
+                logTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">No security events logged for this shift.</td></tr>`;
+            } else {
+                logTbody.innerHTML = activityLog.map(log => `
+                    <tr>
+                        <td>${log.timestamp}</td>
+                        <td>${log.busNum}</td>
+                        <td>${log.driver}</td>
+                        <td><b>${log.eventType}</b></td>
+                        <td>${log.details}</td>
+                    </tr>
+                `).join('');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeEndOfDayReport() {
+            document.getElementById('report-modal').classList.add('hidden');
+        }
+
+        function emailReport() {
+            const dateStr = new Date().toLocaleDateString();
+            const subject = encodeURIComponent(`TACNET SCHOOL - End of Day Shift Report (${dateStr})`);
+            let bodyText = `TACNET SCHOOL SHIFT REPORT - ${dateStr}%0D%0A`;
+            bodyText += `Creator: Earl A. Wood (Retired Deputy Sheriff)%0D%0A`;
+            bodyText += `--------------------------------------------------%0D%0A%0D%0A`;
+            bodyText += `ACTIVE FLEET SUMMARY:%0D%0A`;
+            
+            fleet.forEach(b => {
+                bodyText += `- ${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot} | Driver: ${b.driver || 'Unassigned'} | Status: ${b.status}%0D%0A`;
+            });
+
+            bodyText += `%0D%0ATIMESTAMPED LOG HIGHLIGHTS:%0D%0A`;
+            activityLog.slice(0, 10).forEach(log => {
+                bodyText += `[${log.timestamp}] ${log.busNum} (${log.driver}) - ${log.eventType}: ${log.details}%0D%0A`;
+            });
+
+            window.location.href = `mailto:?subject=${subject}&body=${bodyText}`;
         }
 
         window.onload = () => {
