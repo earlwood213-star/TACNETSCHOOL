@@ -275,11 +275,11 @@
         .config-box {
             padding: 0.85rem;
             border-bottom: 2px solid var(--panel-border);
-            background: rgba(0, 0, 0, 0.25);
+            background: rgba(0, 0, 0, 0.35);
         }
 
         .config-title {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: 900;
             color: var(--neon-blue);
             margin-bottom: 0.5rem;
@@ -293,27 +293,33 @@
         }
 
         .config-inputs select, .config-inputs input {
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             border: 1px solid var(--panel-border);
             color: #fff;
-            padding: 0.4rem 0.6rem;
+            padding: 0.5rem 0.6rem;
             border-radius: 6px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
 
-        .config-inputs select { width: 35%; }
-        .config-inputs input { width: 65%; }
+        .config-inputs select { width: 40%; font-weight: bold; }
+        .config-inputs input { width: 60%; }
 
         .config-btn {
             background: var(--neon-blue);
             color: #000;
             border: none;
-            padding: 0.4rem;
+            padding: 0.55rem;
             border-radius: 6px;
             font-weight: bold;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             cursor: pointer;
             width: 100%;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+            transition: all 0.2s;
+        }
+
+        .config-btn:active {
+            transform: scale(0.98);
         }
 
         .bus-list {
@@ -325,6 +331,11 @@
             padding: 0.85rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .bus-card:hover {
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .badge {
@@ -407,8 +418,8 @@
             </div>
 
             <div class="glass-box">
-                <h2 style="color: var(--neon-blue);" id="driver-bus-title">Bus #20</h2>
-                <p>Route: Amherst North | Driver: <strong id="driver-name-text">John Doe</strong></p>
+                <h2 style="color: var(--neon-blue);" id="driver-bus-title">Slot #1 (Unassigned)</h2>
+                <p>Status: Active GPS Beacon | Driver: <strong id="driver-name-text">Unassigned</strong></p>
             </div>
 
             <div class="glass-box">
@@ -456,21 +467,21 @@
             <div class="sidebar">
                 <!-- SCHOOL FLEET CONFIGURATOR -->
                 <div class="config-box">
-                    <div class="config-title">✏️ CUSTOMIZE DISTRICT BUS NUMBERS</div>
+                    <div class="config-title">✏️ ENTER DISTRICT BUS NUMBERS</div>
                     <div class="config-inputs">
                         <select id="select-bus-slot" onchange="loadBusConfigValues()">
-                            <!-- Generated via JS -->
+                            <!-- Populated via JS -->
                         </select>
-                        <input type="text" id="input-bus-id" placeholder="Enter Bus # (e.g., 42B)">
+                        <input type="text" id="input-bus-id" placeholder="Bus # (e.g. 104)">
                     </div>
                     <div class="config-inputs">
-                        <input type="text" id="input-bus-driver" placeholder="Enter Driver Name" style="width: 100%;">
+                        <input type="text" id="input-bus-driver" placeholder="Driver Name (Optional)" style="width: 100%;">
                     </div>
-                    <button class="config-btn" onclick="saveCustomBusNumber()">Save Vehicle Assignment</button>
+                    <button class="config-btn" onclick="saveCustomBusNumber()">Save & Advance to Next Bus ➔</button>
                 </div>
 
                 <div style="padding: 0.75rem 1rem; font-weight: bold; color: var(--neon-blue); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
-                    Active Bus Fleet (<span id="fleet-count">20</span> Online)
+                    Active Bus Fleet (20 Slots Online)
                 </div>
                 <div class="bus-list" id="bus-list"></div>
                 <div class="credits-footer" style="padding: 0.75rem; background: rgba(0,0,0,0.2);">
@@ -479,7 +490,7 @@
             </div>
             <div class="map-container">
                 <div id="alert-banner" class="alert-banner">
-                    <span id="alert-text">⚠️ EMERGENCY ALARM: BUS #20</span>
+                    <span id="alert-text">⚠️ EMERGENCY ALARM</span>
                     <button onclick="acknowledgeAlert()" style="margin-left: 15px; padding: 0.3rem 0.8rem; border-radius: 6px; border: none; font-weight: bold; cursor: pointer;">CONFIRM / CALL 911</button>
                 </div>
                 <div id="map"></div>
@@ -497,13 +508,12 @@
         const baseLat = 37.5854;
         const baseLng = -79.0514;
 
-        // Initialize 20 customizable bus slots
+        // Initialize 20 completely blank bus slots for the school
         for (let i = 1; i <= 20; i++) {
             fleetData.push({
                 slotIndex: i,
-                id: i === 20 ? '20' : (100 + i).toString(),
-                driver: i === 20 ? 'John Doe' : `Driver #${i}`,
-                route: `Route ${i}`,
+                id: '', // Blank - user fills in
+                driver: '', // Blank - user fills in
                 status: 'GREEN',
                 lat: baseLat + (Math.random() - 0.5) * 0.08,
                 lng: baseLng + (Math.random() - 0.5) * 0.08
@@ -515,7 +525,7 @@
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
                     (position) => {
-                        const activeBus = fleetData[19]; // Slot 20 is driver view
+                        const activeBus = fleetData[0]; // Primary slot tracking
                         if (activeBus) {
                             activeBus.lat = position.coords.latitude;
                             activeBus.lng = position.coords.longitude;
@@ -530,9 +540,10 @@
 
         function populateBusSelectDropdown() {
             const select = document.getElementById('select-bus-slot');
-            select.innerHTML = fleetData.map((bus, idx) => `
-                <option value="${idx}">Slot #${bus.slotIndex} (Bus ${bus.id})</option>
-            `).join('');
+            select.innerHTML = fleetData.map((bus, idx) => {
+                const labelText = bus.id ? `Slot #${bus.slotIndex} (Bus ${bus.id})` : `Slot #${bus.slotIndex} [EMPTY]`;
+                return `<option value="${idx}">${labelText}</option>`;
+            }).join('');
             loadBusConfigValues();
         }
 
@@ -544,22 +555,33 @@
         }
 
         function saveCustomBusNumber() {
-            const idx = document.getElementById('select-bus-slot').value;
-            const newId = document.getElementById('input-bus-id').value.trim() || `Bus #${parseInt(idx)+1}`;
-            const newDriver = document.getElementById('input-bus-driver').value.trim() || `Driver #${parseInt(idx)+1}`;
+            const idx = parseInt(document.getElementById('select-bus-slot').value);
+            const newId = document.getElementById('input-bus-id').value.trim();
+            const newDriver = document.getElementById('input-bus-driver').value.trim();
 
             fleetData[idx].id = newId;
             fleetData[idx].driver = newDriver;
 
-            // Update driver UI if Slot 20 was modified
-            if (idx == 19) {
-                document.getElementById('driver-bus-title').innerText = `Bus #${newId}`;
-                document.getElementById('driver-name-text').innerText = newDriver;
+            // Update driver UI if Slot 1 was modified
+            if (idx === 0) {
+                document.getElementById('driver-bus-title').innerText = newId ? `Bus #${newId}` : `Slot #1 (Unassigned)`;
+                document.getElementById('driver-name-text').innerText = newDriver || 'Unassigned';
+            }
+
+            // ADVANCE AUTOMATICALLY TO THE NEXT SLOT DOWN THE LIST
+            let nextIdx = idx + 1;
+            if (nextIdx >= fleetData.length) {
+                nextIdx = 0; // Wrap back to Slot 1 if at the end
             }
 
             populateBusSelectDropdown();
-            document.getElementById('select-bus-slot').value = idx;
+            document.getElementById('select-bus-slot').value = nextIdx;
+            loadBusConfigValues();
             updateFleetMap();
+
+            // Auto-focus input for fast consecutive entry
+            document.getElementById('input-bus-id').focus();
+            document.getElementById('input-bus-id').select();
         }
 
         function switchView(view) {
@@ -620,10 +642,13 @@
             if (bus.status === "ORANGE") colorHex = "#f97316";
             if (bus.status === "RED") colorHex = "#ef4444";
 
+            const displayName = bus.id ? `Bus #${bus.id}` : `Slot #${bus.slotIndex} (Unassigned)`;
+            const driverText = bus.driver ? `Driver: ${bus.driver}` : `No driver assigned`;
+
             return `
                 <div style="text-align:center;">
-                    <b style="font-size:1.1rem;">Bus #${bus.id}</b><br>
-                    <span>Driver: ${bus.driver}</span><br>
+                    <b style="font-size:1.1rem;">${displayName}</b><br>
+                    <span>${driverText}</span><br>
                     <span style="display:inline-block; margin-top:5px; padding:3px 8px; border-radius:4px; background:${colorHex}; color:${bus.status === 'YELLOW' ? '#000' : '#fff'}; font-weight:bold;">
                         ${bus.status}
                     </span>
@@ -644,7 +669,7 @@
 
         function simulateMovement() {
             fleetData.forEach((bus, i) => {
-                if (i !== 19 || !navigator.geolocation) {
+                if (i !== 0 || !navigator.geolocation) {
                     bus.lat += (Math.random() - 0.5) * 0.001;
                     bus.lng += (Math.random() - 0.5) * 0.001;
                 }
@@ -663,7 +688,7 @@
         }
 
         function updateDriverStatus(status) {
-            const activeBus = fleetData[19];
+            const activeBus = fleetData[0];
             if (activeBus) {
                 activeBus.status = status;
                 if (status !== 'RED') {
@@ -680,15 +705,16 @@
         }
 
         function stopPTT() {
-            document.getElementById('driver-reply-box').innerText = "Office Reply: \"Copy that, John.\"";
+            document.getElementById('driver-reply-box').innerText = "Office Reply: \"Copy that.\"";
             setTimeout(() => { resetDriverSystem(); }, 5000);
         }
 
         function triggerEmergency() {
             updateDriverStatus('RED');
-            const activeBus = fleetData[19];
+            const activeBus = fleetData[0];
+            const busLabel = activeBus.id ? `BUS #${activeBus.id}` : `SLOT #${activeBus.slotIndex}`;
             document.getElementById('alert-banner').style.display = 'flex';
-            document.getElementById('alert-text').innerText = `🚨 RED EMERGENCY: BUS #${activeBus.id} (${activeBus.driver.toUpperCase()})`;
+            document.getElementById('alert-text').innerText = `🚨 RED EMERGENCY: ${busLabel}`;
         }
 
         function acknowledgeAlert() {
@@ -707,11 +733,11 @@
 
             listContainer.innerHTML = fleetData.map(bus => `
                 <div class="bus-card" onclick="focusBus('${bus.slotIndex}')">
-                    <div style="display:flex; justify-content:space-between;">
-                        <strong>Bus #${bus.id}</strong>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong>${bus.id ? `Bus #${bus.id}` : `Slot #${bus.slotIndex} <span style="font-weight:normal; opacity:0.6;">(Empty)</span>`}</strong>
                         <span class="badge" style="background:var(--status-${bus.status.toLowerCase()}); color:${bus.status==='YELLOW'?'#000':'#fff'};">${bus.status}</span>
                     </div>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top:0.2rem;">Driver: ${bus.driver}</p>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top:0.2rem;">${bus.driver ? `Driver: ${bus.driver}` : `Unassigned`}</p>
                 </div>
             `).join('');
         }
