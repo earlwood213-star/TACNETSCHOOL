@@ -24,7 +24,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 1000;
+            z-index: 2000;
+            position: relative;
         }
 
         .school-branding-tag {
@@ -50,40 +51,56 @@
         .nav-btn-setup { border-color: #fbbf24; color: #fbbf24; }
         .nav-btn-setup.active { background: #fbbf24; color: #020926; box-shadow: 0 0 15px #fbbf24; }
 
-        #main-container { flex: 1; position: relative; width: 100%; height: calc(100vh - 60px); }
+        #main-container { flex: 1; position: relative; width: 100%; height: calc(100vh - 60px); z-index: 1; }
         .view-panel { width: 100%; height: 100%; display: flex; }
         .hidden { display: none !important; }
 
         /* SETUP VIEW */
         #setup-view {
-            flex-direction: column;
-            align-items: center;
-            padding: 25px;
+            flex-direction: row;
+            padding: 20px;
+            gap: 20px;
             overflow-y: auto;
+            position: relative;
+            z-index: 10;
         }
 
         .setup-card {
-            width: 100%;
-            max-width: 750px;
-            background: rgba(0, 120, 255, 0.15);
+            flex: 1;
+            max-width: 520px;
+            background: rgba(0, 20, 60, 0.95);
             border: 2px solid #fbbf24;
             border-radius: 18px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 20;
+        }
+
+        .setup-map-card {
+            flex: 1.2;
+            background: rgba(0, 120, 255, 0.1);
+            border: 2px solid #00f0ff;
+            border-radius: 18px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 12px;
         }
 
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
         .form-group.full-width { grid-column: span 2; }
 
         .form-group label {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 800;
             color: #00f0ff;
             text-transform: uppercase;
@@ -93,10 +110,14 @@
             background: #000000 !important;
             color: #ffffff !important;
             border: 2px solid #00f0ff !important;
-            padding: 12px;
+            padding: 10px;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 15px;
             outline: none;
+            pointer-events: auto !important;
+            user-select: text !important;
+            position: relative;
+            z-index: 30;
         }
 
         input[type="text"]:focus {
@@ -108,7 +129,7 @@
             background: #00f0ff;
             color: #020926;
             border: none;
-            padding: 12px 20px;
+            padding: 10px 16px;
             border-radius: 6px;
             font-weight: 900;
             cursor: pointer;
@@ -119,15 +140,24 @@
             background: #fbbf24;
             color: #020926;
             border: none;
-            padding: 16px;
+            padding: 15px;
             border-radius: 8px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 900;
             cursor: pointer;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 10px;
             text-transform: uppercase;
             box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+        }
+
+        #setup-picker-map {
+            width: 100%;
+            height: 100%;
+            min-height: 350px;
+            border-radius: 12px;
+            border: 1px solid #00f0ff;
+            z-index: 5;
         }
 
         /* DRIVER VIEW */
@@ -195,48 +225,51 @@
 
         <div id="setup-view" class="view-panel">
             <div class="setup-card">
-                <h2 style="color: #fbbf24; font-size: 24px; border-bottom: 2px solid #fbbf24; padding-bottom: 10px;">⚙️ SYSTEM & LOCATION SETUP</h2>
+                <h2 style="color: #fbbf24; font-size: 20px; border-bottom: 2px solid #fbbf24; padding-bottom: 8px;">⚙️ LOCATION & CAMPUS SETUP</h2>
                 
-                <form onsubmit="event.preventDefault(); applySetup();" autocomplete="off">
-                    <div class="form-grid">
-                        <div class="form-group full-width">
-                            <label>School District Name</label>
-                            <input type="text" id="cfg-district" placeholder="Enter District Name (e.g. Brick Township Public Schools)" autocomplete="off">
-                        </div>
-                        <div class="form-group full-width">
-                            <label>School Campus Name</label>
-                            <input type="text" id="cfg-school" placeholder="Enter Campus Name (e.g. Brick Memorial High School)" autocomplete="off">
-                        </div>
-                        
-                        <div class="form-group full-width">
-                            <label>Full Address, City, State or Zip (Nationwide Search)</label>
-                            <div style="display: flex; gap: 8px;">
-                                <input type="text" id="cfg-address" placeholder="e.g. 2001 Lanes Mill Rd, Brick, NJ 08724" autocomplete="off" style="flex: 1;">
-                                <button type="button" class="btn-search" onclick="lookupAddress()">🔍 Find Location</button>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>City / Town</label>
-                            <input type="text" id="cfg-city" placeholder="Enter City/Town" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label>State & Zip Code</label>
-                            <input type="text" id="cfg-state-zip" placeholder="Enter State & Zip" autocomplete="off">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Map Latitude</label>
-                            <input type="text" id="cfg-lat" placeholder="Auto-fills from address or enter manual" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label>Map Longitude</label>
-                            <input type="text" id="cfg-lng" placeholder="Auto-fills from address or enter manual" autocomplete="off">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>School District Name</label>
+                        <input type="text" id="cfg-district" placeholder="Enter District Name" autocomplete="off">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>School Campus Name</label>
+                        <input type="text" id="cfg-school" placeholder="Enter Campus Name" autocomplete="off">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label>Full Address Search (Nationwide)</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="cfg-address" placeholder="Type Street Address, City, State or Zip" autocomplete="off" style="flex: 1;">
+                            <button type="button" class="btn-search" onclick="lookupAddress()">🔍 Find</button>
                         </div>
                     </div>
 
-                    <button type="button" class="btn-save-setup" id="btn-save" onclick="applySetup()">💾 SAVE LOCATION & LOAD MAP</button>
-                </form>
+                    <div class="form-group">
+                        <label>City / Town</label>
+                        <input type="text" id="cfg-city" placeholder="City or Town" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>State & Zip Code</label>
+                        <input type="text" id="cfg-state-zip" placeholder="State & Zip Code" autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Latitude</label>
+                        <input type="text" id="cfg-lat" placeholder="Click map or enter lat" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude</label>
+                        <input type="text" id="cfg-lng" placeholder="Click map or enter lng" autocomplete="off">
+                    </div>
+                </div>
+
+                <button type="button" class="btn-save-setup" id="btn-save" onclick="applySetup()">💾 SAVE LOCATION & LOAD MONITOR MAP</button>
+            </div>
+
+            <div class="setup-map-card">
+                <div style="font-size: 14px; font-weight: bold; color: #00f0ff;">📍 CLICK ANYWHERE ON US MAP TO PIN LOCATION:</div>
+                <div id="setup-picker-map"></div>
             </div>
         </div>
         
@@ -300,41 +333,71 @@
             address: "",
             city: "",
             state_zip: "",
-            lat: null,
-            lng: null
+            lat: 39.8283, // Center US baseline
+            lng: -98.5795
         };
 
         let map = null;
+        let pickerMap = null;
+        let pickerMarker = null;
         let busMarkers = {};
         let fleet = [];
+
+        function initPickerMap() {
+            if (!pickerMap) {
+                pickerMap = L.map('setup-picker-map').setView([SCHOOL_CONFIG.lat, SCHOOL_CONFIG.lng], 4);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(pickerMap);
+
+                pickerMap.on('click', function(e) {
+                    setPickerCoords(e.latlng.lat, e.latlng.lng);
+                });
+            }
+        }
+
+        function setPickerCoords(lat, lng) {
+            lat = parseFloat(lat).toFixed(6);
+            lng = parseFloat(lng).toFixed(6);
+            document.getElementById('cfg-lat').value = lat;
+            document.getElementById('cfg-lng').value = lng;
+            SCHOOL_CONFIG.lat = parseFloat(lat);
+            SCHOOL_CONFIG.lng = parseFloat(lng);
+
+            if (pickerMarker) {
+                pickerMarker.setLatLng([lat, lng]);
+            } else {
+                pickerMarker = L.marker([lat, lng], { draggable: true }).addTo(pickerMap);
+                pickerMarker.on('dragend', function(e) {
+                    let pos = pickerMarker.getLatLng();
+                    setPickerCoords(pos.lat, pos.lng);
+                });
+            }
+            pickerMap.panTo([lat, lng]);
+        }
 
         function lookupAddress() {
             let addr = document.getElementById('cfg-address').value.trim();
             let city = document.getElementById('cfg-city').value.trim();
             let stateZip = document.getElementById('cfg-state-zip').value.trim();
 
-            let fullQuery = [addr, city, stateZip].filter(Boolean).join(', ');
+            let query = [addr, city, stateZip].filter(Boolean).join(', ');
 
-            if (!fullQuery) {
-                alert("Please type an Address, City, or Zip Code into the search box first.");
+            if (!query) {
+                alert("Please enter a street address, city, or zip code in the search box.");
                 return;
             }
 
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullQuery)}`)
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.length > 0) {
-                        let lat = parseFloat(data[0].lat).toFixed(6);
-                        let lng = parseFloat(data[0].lon).toFixed(6);
-                        document.getElementById('cfg-lat').value = lat;
-                        document.getElementById('cfg-lng').value = lng;
-                        alert(`Found coordinates for: ${data[0].display_name}`);
+                        setPickerCoords(data[0].lat, data[0].lon);
+                        pickerMap.setZoom(13);
                     } else {
-                        alert("Could not locate that address. Please check your spelling or enter Latitude & Longitude directly.");
+                        alert("Location not found automatically. Click your location directly on the map to set pin.");
                     }
                 })
                 .catch(() => {
-                    alert("Unable to reach lookup server. You can enter exact Latitude and Longitude coordinates manually in the boxes below.");
+                    alert("Network lookup blocked or unavailable. Click your target location directly on the map to set pin.");
                 });
         }
 
@@ -351,10 +414,6 @@
             if (!isNaN(manualLat) && !isNaN(manualLng)) {
                 SCHOOL_CONFIG.lat = manualLat;
                 SCHOOL_CONFIG.lng = manualLng;
-            } else {
-                // If no coords entered or found, center baseline over middle US (Kansas)
-                SCHOOL_CONFIG.lat = 39.8283;
-                SCHOOL_CONFIG.lng = -98.5795;
             }
 
             updateApp();
@@ -362,12 +421,12 @@
         }
 
         function getFormattedAddress() {
-            return [SCHOOL_CONFIG.address, SCHOOL_CONFIG.city, SCHOOL_CONFIG.state_zip].filter(Boolean).join(', ') || "Address Not Configured";
+            return [SCHOOL_CONFIG.address, SCHOOL_CONFIG.city, SCHOOL_CONFIG.state_zip].filter(Boolean).join(', ') || "Location Unconfigured";
         }
 
         function updateApp() {
             document.getElementById('header-district-name').innerText = (SCHOOL_CONFIG.district || "TACNET SCHOOL SYSTEM").toUpperCase();
-            document.getElementById('driver-school-display').innerText = SCHOOL_CONFIG.school ? `${SCHOOL_CONFIG.school} -${SCHOOL_CONFIG.district}` : "UNCONFIGURED";
+            document.getElementById('driver-school-display').innerText = SCHOOL_CONFIG.school ? `${SCHOOL_CONFIG.school} - ${SCHOOL_CONFIG.district}` : "UNCONFIGURED";
             document.getElementById('driver-address-display').innerText = getFormattedAddress();
 
             fleet = [];
@@ -377,8 +436,8 @@
                     id: '',
                     driver: '',
                     status: 'GREEN',
-                    lat: SCHOOL_CONFIG.lat + (Math.random() - 0.5) * 0.015,
-                    lng: SCHOOL_CONFIG.lng + (Math.random() - 0.5) * 0.015
+                    lat: SCHOOL_CONFIG.lat + (Math.random() - 0.5) * 0.012,
+                    lng: SCHOOL_CONFIG.lng + (Math.random() - 0.5) * 0.012
                 });
             }
 
@@ -427,69 +486,3 @@
             renderDropdowns();
             document.getElementById('select-slot').value = i;
             renderSidebar();
-            syncDriverView();
-            if (map) drawMarker(fleet[i]);
-        }
-
-        function syncDriverView() {
-            let i = parseInt(document.getElementById('select-active-driver-slot').value) || 0;
-            document.getElementById('driver-bus-title').innerText = fleet[i].id ? `Bus #${fleet[i].id}` : `Slot #${fleet[i].slot}`;
-            document.getElementById('driver-name-sub').innerText = fleet[i].driver ? `Driver: ${fleet[i].driver}` : `Driver: Unassigned`;
-        }
-
-        function renderSidebar() {
-            document.getElementById('bus-list').innerHTML = fleet.map(b => `
-                <div class="bus-item">
-                    <div><b>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</b> (${b.driver || 'Unassigned'})</div>
-                    <span class="badge badge-GREEN">${b.status}</span>
-                </div>
-            `).join('');
-        }
-
-        function showView(view) {
-            document.getElementById('setup-view').classList.toggle('hidden', view !== 'setup');
-            document.getElementById('driver-view').classList.toggle('hidden', view !== 'driver');
-            document.getElementById('command-view').classList.toggle('hidden', view !== 'command');
-
-            document.getElementById('tab-setup').classList.toggle('active', view === 'setup');
-            document.getElementById('tab-driver').classList.toggle('active', view === 'driver');
-            document.getElementById('tab-command').classList.toggle('active', view === 'command');
-
-            if (view === 'command') {
-                setTimeout(() => {
-                    if (!map) {
-                        map = L.map('map').setView([SCHOOL_CONFIG.lat || 39.8283, SCHOOL_CONFIG.lng || -98.5795], 13);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                    }
-                    map.invalidateSize();
-                    map.setView([SCHOOL_CONFIG.lat, SCHOOL_CONFIG.lng], 13);
-                    fleet.forEach(b => drawMarker(b));
-                }, 150);
-            }
-        }
-
-        function drawMarker(b) {
-            if (busMarkers[b.slot]) map.removeLayer(busMarkers[b.slot]);
-            let unitTitle = b.id ? `Bus #${b.id}` : `Slot #${b.slot}`;
-            let fullAddress = getFormattedAddress();
-
-            // Creates blue dot unit indicators
-            let marker = L.circleMarker([b.lat, b.lng], {
-                radius: 12,
-                fillColor: '#00f0ff',
-                color: '#ffffff',
-                weight: 3,
-                fillOpacity: 0.95
-            }).addTo(map);
-
-            let popupContent = `
-                <div style="color: #000; font-family: sans-serif; min-width: 180px;">
-                    <b style="font-size: 16px; color: #0055ff;">${unitTitle}</b><br>
-                    <b>Driver:</b> ${b.driver || 'Unassigned'}<br>
-                    <hr style="margin: 6px 0;">
-                    <b>📍 Address:</b><br>${fullAddress}
-                </div>
-            `;
-
-            // Hover tooltip & Click popup displaying exact configured address
-            marker.bindTooltip(`<b>${unitTitle
