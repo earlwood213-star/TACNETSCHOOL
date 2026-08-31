@@ -8,7 +8,6 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         
-        /* DEEP BLUE BACKGROUND WITH GLOW EFFECT */
         body { 
             background: radial-gradient(circle at center, #071c52 0%, #020926 100%); 
             color: #ffffff; 
@@ -18,7 +17,6 @@
             overflow: hidden; 
         }
 
-        /* NAVIGATION CONTROL BAR */
         .view-switcher {
             background: rgba(1, 10, 42, 0.9);
             border-bottom: 2px solid #00f0ff;
@@ -51,9 +49,7 @@
         .view-panel { width: 100%; height: 100%; display: flex; }
         .hidden { display: none !important; }
 
-        /* ========================================================= */
-        /* HOME / DRIVER VIEW - LARGE GLASS CARDS & PROMINENT HEADER */
-        /* ========================================================= */
+        /* DRIVER VIEW */
         #driver-view { 
             flex-direction: column; 
             align-items: center;
@@ -62,7 +58,6 @@
             gap: 20px;
         }
 
-        /* GLASSMORPHISM CARD LAYER */
         .glass-card {
             width: 100%;
             max-width: 750px;
@@ -75,7 +70,6 @@
             box-shadow: 0 8px 32px 0 rgba(0, 240, 255, 0.18), inset 0 0 15px rgba(0, 240, 255, 0.1);
         }
 
-        /* BRANDING HEADER - DRIVER HOME PAGE */
         .driver-header {
             text-align: center;
             border-bottom: 2px solid rgba(0, 240, 255, 0.3);
@@ -103,7 +97,6 @@
             margin-top: 4px;
         }
 
-        /* DRIVER SAFETY WARNING BANNER */
         .safety-banner-large {
             background: #eab308;
             color: #000000;
@@ -118,7 +111,6 @@
             margin-top: 10px;
         }
 
-        /* DRIVER ASSIGNED SLOT DISPLAY */
         .bus-status-title {
             font-size: 30px;
             font-weight: 800;
@@ -132,7 +124,6 @@
             color: #e2e8f0;
         }
 
-        /* DRIVER BUTTON GRID */
         .grid-buttons { 
             display: grid; 
             grid-template-columns: 1fr 1fr; 
@@ -183,11 +174,9 @@
             border: 1px solid rgba(0, 240, 255, 0.4);
         }
 
-        /* ========================================================= */
         /* SCHOOL COMMAND MONITOR VIEW */
-        /* ========================================================= */
         .sidebar { 
-            width: 420px; 
+            width: 440px; 
             background: rgba(2, 9, 38, 0.95); 
             border-right: 2px solid #00f0ff; 
             display: flex; 
@@ -210,7 +199,7 @@
             border: 1px solid #00f0ff; 
             padding: 10px; 
             border-radius: 6px; 
-            font-size: 16px;
+            font-size: 15px;
             flex: 1; 
         }
 
@@ -319,7 +308,6 @@
 </head>
 <body>
 
-    <!-- TOP CONTROL NAVIGATION SWITCHER -->
     <div class="view-switcher">
         <button id="tab-driver" class="nav-btn active" onclick="showView('driver')">🏠 MAIN DRIVER UI</button>
         <button id="tab-command" class="nav-btn" onclick="showView('command')">🖥️ SCHOOL MONITOR VIEW</button>
@@ -327,12 +315,9 @@
 
     <div id="main-container">
         
-        <!-- ========================================================= -->
-        <!-- HOME / DRIVER VIEW (COMPLETE BRANDING & LARGE TEXT) -->
-        <!-- ========================================================= -->
+        <!-- HOME / DRIVER VIEW -->
         <div id="driver-view" class="view-panel">
             
-            <!-- BRANDING & LEGAL GLASS CARD -->
             <div class="glass-card">
                 <div class="driver-header">
                     <div class="main-title">TACNET SCHOOL</div>
@@ -345,10 +330,9 @@
                 </div>
             </div>
 
-            <!-- DRIVER STATUS & BEACON CONTROLS CARD -->
             <div class="glass-card">
                 <div class="bus-status-title" id="driver-bus-title">Slot #1 (Unassigned)</div>
-                <div class="bus-status-sub">Status: Active GPS Beacon</div>
+                <div class="bus-status-sub" id="driver-name-sub">Driver: Unassigned</div>
 
                 <div class="grid-buttons">
                     <button class="btn-large btn-green" onclick="setDriverStatus('GREEN')">GREEN<br><small style="font-size:14px;">Normal Operation</small></button>
@@ -358,7 +342,6 @@
                 </div>
             </div>
 
-            <!-- DISPATCH FEED DISPLAY CARD -->
             <div class="glass-card">
                 <div style="font-size: 18px; font-weight: 700; color: #94a3b8;">DISPATCH INTERCOM FEED:</div>
                 <div id="driver-reply" class="feed-display">"Channel Ready"</div>
@@ -366,20 +349,21 @@
 
         </div>
 
-        <!-- ========================================================= -->
         <!-- SCHOOL COMMAND MONITOR VIEW -->
-        <!-- ========================================================= -->
         <div id="command-view" class="view-panel hidden">
             <div class="sidebar">
                 
-                <!-- BUS NUMBER ENTRY -->
+                <!-- ASSIGN BUS NUMBER AND DRIVER NAME -->
                 <div class="panel-glass">
-                    <p style="color: #00f0ff; font-weight: bold; font-size: 16px;">✏️ ASSIGN BUS NUMBERS</p>
+                    <p style="color: #00f0ff; font-weight: bold; font-size: 16px;">✏️ ASSIGN BUS & DRIVER INFO</p>
                     <div class="input-row">
                         <select id="select-slot" onchange="loadSlotData()"></select>
-                        <input type="text" id="input-bus-num" placeholder="Bus # (e.g. 104)">
                     </div>
-                    <button class="action-btn" onclick="saveSlotData()">Save Bus Number</button>
+                    <div class="input-row">
+                        <input type="text" id="input-bus-num" placeholder="Bus # (e.g. 133)">
+                        <input type="text" id="input-driver-name" placeholder="Driver Name">
+                    </div>
+                    <button class="action-btn" onclick="saveSlotData()">Save Bus & Driver Info</button>
                 </div>
 
                 <!-- DISPATCH TALK BACK -->
@@ -416,16 +400,18 @@
         let map = null;
         let busMarkers = {};
         let fleet = [];
+        let currentActiveDriverSlot = 0; // Tracks which slot the Driver UI is tied to
 
         const baseLat = 37.5815;
         const baseLng = -79.0506;
 
-        // Initialize 20 Fleet Slots
         for (let i = 1; i <= 20; i++) {
             fleet.push({
                 slot: i,
                 id: '',
+                driver: '',
                 status: 'GREEN',
+                lastMessage: '"Channel Ready"',
                 lat: baseLat + (Math.random() - 0.5) * 0.06,
                 lng: baseLng + (Math.random() - 0.5) * 0.06
             });
@@ -442,6 +428,7 @@
                 commandView.classList.add('hidden');
                 tabDriver.classList.add('active');
                 tabCommand.classList.remove('active');
+                updateDriverUIDisplay();
             } else {
                 driverView.classList.add('hidden');
                 commandView.classList.remove('hidden');
@@ -468,13 +455,21 @@
             setTimeout(() => { map.invalidateSize(); }, 200);
         }
 
+        function getBusTitle(bus) {
+            let label = bus.id ? `Bus #${bus.id}` : `Slot #${bus.slot}`;
+            if (bus.driver) {
+                label += ` (${bus.driver})`;
+            }
+            return label;
+        }
+
         function createOrUpdateMarker(bus) {
             if (busMarkers[bus.slot]) {
                 map.removeLayer(busMarkers[bus.slot]);
             }
 
             let marker;
-            let title = bus.id ? 'Bus #' + bus.id : 'Slot #' + bus.slot;
+            let title = getBusTitle(bus);
 
             if (bus.status === 'RED') {
                 let redIcon = L.divIcon({
@@ -509,7 +504,7 @@
             const selSlot = document.getElementById('select-slot');
             const selTalk = document.getElementById('select-talk-slot');
 
-            let html = fleet.map(b => `<option value="${b.slot - 1}">${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</option>`).join('');
+            let html = fleet.map(b => `<option value="${b.slot - 1}">${getBusTitle(b)}</option>`).join('');
             selSlot.innerHTML = html;
             selTalk.innerHTML = html;
         }
@@ -517,20 +512,27 @@
         function loadSlotData() {
             let idx = document.getElementById('select-slot').value;
             document.getElementById('input-bus-num').value = fleet[idx].id;
+            document.getElementById('input-driver-name').value = fleet[idx].driver;
         }
 
         function saveSlotData() {
             let idx = document.getElementById('select-slot').value;
-            let val = document.getElementById('input-bus-num').value.trim();
-            fleet[idx].id = val;
-
-            if (idx == 0) {
-                document.getElementById('driver-bus-title').innerText = val ? `Bus #${val}` : `Slot #1 (Unassigned)`;
-            }
+            fleet[idx].id = document.getElementById('input-bus-num').value.trim();
+            fleet[idx].driver = document.getElementById('input-driver-name').value.trim();
 
             renderDropdowns();
             document.getElementById('select-slot').value = idx;
+            document.getElementById('select-talk-slot').value = idx;
+            
+            updateDriverUIDisplay();
             updateMapDisplay();
+        }
+
+        function updateDriverUIDisplay() {
+            let activeBus = fleet[currentActiveDriverSlot];
+            document.getElementById('driver-bus-title').innerText = activeBus.id ? `Bus #${activeBus.id}` : `Slot #${activeBus.slot} (Unassigned)`;
+            document.getElementById('driver-name-sub').innerText = activeBus.driver ? `Driver: ${activeBus.driver}` : `Driver: Unassigned`;
+            document.getElementById('driver-reply').innerText = activeBus.lastMessage;
         }
 
         function updateMapDisplay() {
@@ -550,30 +552,36 @@
         }
 
         function setDriverStatus(status) {
-            fleet[0].status = status;
-            updateMapDisplay();
+            let activeBus = fleet[currentActiveDriverSlot];
+            activeBus.status = status;
 
             if (status === 'RED') {
-                document.getElementById('driver-reply').innerText = "🚨 RED EMERGENCY ALERT BROADCASTED TO SCHOOL COMMAND!";
+                activeBus.lastMessage = "🚨 RED EMERGENCY ALERT BROADCASTED TO SCHOOL COMMAND!";
             } else if (status === 'GREEN') {
-                document.getElementById('driver-reply').innerText = "Channel Ready";
+                activeBus.lastMessage = "Channel Ready";
             }
+
+            updateDriverUIDisplay();
+            updateMapDisplay();
         }
 
         function holdOrange() {
-            if (fleet[0].status !== 'RED') {
+            let activeBus = fleet[currentActiveDriverSlot];
+            if (activeBus.status !== 'RED') {
                 setDriverStatus('ORANGE');
-                document.getElementById('driver-reply').innerText = "🎙️ DRIVER TRANSMITTING...";
+                activeBus.lastMessage = "🎙️ DRIVER TRANSMITTING...";
+                updateDriverUIDisplay();
             }
         }
 
         function releaseOrange() {
-            if (fleet[0].status === 'ORANGE') {
-                document.getElementById('driver-reply').innerText = "Office Reply: Transmitted to Dispatch";
+            let activeBus = fleet[currentActiveDriverSlot];
+            if (activeBus.status === 'ORANGE') {
+                activeBus.lastMessage = "Office Reply: Transmitted to Dispatch";
+                updateDriverUIDisplay();
                 setTimeout(() => { 
-                    if (fleet[0].status !== 'RED') {
+                    if (activeBus.status !== 'RED') {
                         setDriverStatus('GREEN'); 
-                        document.getElementById('driver-reply').innerText = "Channel Ready"; 
                     }
                 }, 3000);
             }
@@ -583,16 +591,18 @@
             let idx = document.getElementById('select-talk-slot').value;
             let msg = document.getElementById('input-msg').value;
 
-            let prevStatus = fleet[idx].status;
-            fleet[idx].status = 'ORANGE';
+            let targetBus = fleet[idx];
+            let prevStatus = targetBus.status;
+            
+            targetBus.status = 'ORANGE';
+            targetBus.lastMessage = `📢 OFFICE: "${msg}"`;
+
+            updateDriverUIDisplay();
             updateMapDisplay();
 
-            if (idx == 0) {
-                document.getElementById('driver-reply').innerText = `📢 OFFICE: "${msg}"`;
-            }
-
             setTimeout(() => {
-                fleet[idx].status = prevStatus === 'RED' ? 'RED' : 'GREEN';
+                targetBus.status = prevStatus === 'RED' ? 'RED' : 'GREEN';
+                updateDriverUIDisplay();
                 updateMapDisplay();
             }, 4000);
         }
@@ -601,16 +611,18 @@
             let bus = fleet.find(b => b.slot == slot);
             if (bus) {
                 bus.status = 'GREEN';
-                if (slot == 1) {
-                    document.getElementById('driver-reply').innerText = "Channel Ready";
-                }
+                bus.lastMessage = "Channel Ready";
+                updateDriverUIDisplay();
                 updateMapDisplay();
             }
         }
 
         function resetAllBuses() {
-            fleet.forEach(b => b.status = 'GREEN');
-            document.getElementById('driver-reply').innerText = "Channel Ready";
+            fleet.forEach(b => {
+                b.status = 'GREEN';
+                b.lastMessage = "Channel Ready";
+            });
+            updateDriverUIDisplay();
             updateMapDisplay();
         }
 
@@ -621,7 +633,7 @@
             list.innerHTML = fleet.map(b => `
                 <div class="bus-item">
                     <div style="cursor:pointer;" onclick="focusOnBus(${b.slot})">
-                        <div style="font-size:16px; font-weight:800;">${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</div>
+                        <div style="font-size:15px; font-weight:800;">${getBusTitle(b)}</div>
                         <span class="badge badge-${b.status}">${b.status === 'RED' ? '🚨 RED EMERGENCY' : b.status}</span>
                     </div>
                     <button class="btn-bus-reset" onclick="resetBusStatus(${b.slot})">RESET</button>
@@ -639,6 +651,8 @@
 
         window.onload = () => {
             renderDropdowns();
+            loadSlotData();
+            updateDriverUIDisplay();
         };
     </script>
 </body>
