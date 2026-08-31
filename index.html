@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACNET School - Safety & Transportation Command</title>
-    <!-- Leaflet CSS for Map Rendering -->
+    <title>TACNET School - Safety & Transportation Platform</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --panel-dark: #1e293b;
-            --border-color: #334155;
+            --bg-royal: #0a192f;
+            --bg-gradient: linear-gradient(135deg, #0a192f 0%, #1e3a8a 100%);
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(56, 189, 248, 0.3);
+            --glass-glow: 0 8px 32px 0 rgba(0, 119, 255, 0.37);
+            --neon-blue: #38bdf8;
             --text-light: #f8fafc;
             --text-muted: #94a3b8;
             --status-green: #22c55e;
@@ -27,7 +29,7 @@
         }
 
         body {
-            background-color: var(--bg-dark);
+            background: var(--bg-gradient);
             color: var(--text-light);
             display: flex;
             flex-direction: column;
@@ -36,12 +38,14 @@
         }
 
         header {
-            background-color: var(--panel-dark);
-            padding: 1rem 1.5rem;
-            border-bottom: 2px solid var(--border-color);
+            background: rgba(10, 25, 47, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 0.8rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 2000;
         }
 
         .brand {
@@ -51,27 +55,30 @@
         }
 
         .brand-title {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 800;
             letter-spacing: 1px;
-            color: #38bdf8;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
         }
 
         .brand-subtitle {
-            font-size: 0.85rem;
-            background: #0284c7;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
+            font-size: 0.8rem;
+            background: rgba(2, 132, 199, 0.4);
+            border: 1px solid var(--neon-blue);
+            color: #fff;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
             font-weight: 600;
         }
 
         .view-toggle {
             display: flex;
             gap: 0.5rem;
-            background-color: var(--bg-dark);
+            background: rgba(15, 23, 42, 0.8);
             padding: 0.3rem;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
         }
 
         .toggle-btn {
@@ -79,86 +86,111 @@
             border: none;
             color: var(--text-muted);
             padding: 0.5rem 1rem;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.2s;
+            transition: all 0.3s;
         }
 
         .toggle-btn.active {
-            background-color: #0284c7;
+            background: #0284c7;
             color: white;
+            box-shadow: 0 0 12px rgba(2, 132, 199, 0.8);
         }
 
         main {
             display: flex;
             flex: 1;
             position: relative;
+            overflow: hidden;
         }
 
-        /* BUS DRIVER INTERFACE */
+        /* BUS DRIVER GLASS INTERFACE (NO MAP) */
         #driver-view {
             display: flex;
             flex-direction: column;
             width: 100%;
-            max-width: 500px;
+            max-width: 440px;
             margin: auto;
-            padding: 1.5rem;
-            gap: 1.5rem;
+            padding: 1.25rem;
+            gap: 1rem;
             height: 100%;
             justify-content: center;
+            overflow-y: auto;
         }
 
-        .driver-card {
-            background-color: var(--panel-dark);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: var(--glass-glow);
+        }
+
+        .driver-info h2 {
+            font-size: 1.25rem;
+            color: var(--neon-blue);
         }
 
         .status-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-top: 1rem;
+            gap: 0.85rem;
+            margin-top: 0.5rem;
         }
 
         .status-btn {
             border: none;
-            border-radius: 8px;
-            padding: 1.5rem 1rem;
-            font-size: 1.1rem;
-            font-weight: 700;
+            border-radius: 12px;
+            padding: 1.25rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 800;
             color: white;
             cursor: pointer;
-            transition: transform 0.1s, filter 0.2s;
+            transition: transform 0.15s, box-shadow 0.2s;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+            justify-content: center;
+            gap: 0.4rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            user-select: none;
         }
 
         .status-btn:active {
-            transform: scale(0.97);
+            transform: scale(0.96);
         }
 
-        .btn-green { background-color: var(--status-green); }
-        .btn-yellow { background-color: var(--status-yellow); color: #000; }
-        .btn-orange { background-color: var(--status-orange); }
+        .btn-green { background: linear-gradient(145deg, #16a34a, #22c55e); }
+        .btn-yellow { background: linear-gradient(145deg, #ca8a04, #eab308); color: #000; }
+        .btn-orange { background: linear-gradient(145deg, #ea580c, #f97316); }
         .btn-red { 
-            background-color: var(--status-red); 
+            background: linear-gradient(145deg, #dc2626, #ef4444); 
             grid-column: span 2; 
-            padding: 2rem; 
-            font-size: 1.5rem;
-            animation: pulse-border 2s infinite;
+            padding: 1.5rem; 
+            font-size: 1.25rem;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
         }
 
-        @keyframes pulse-border {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        .ptt-box {
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        .chat-bubble-area {
+            background: rgba(2, 6, 23, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--neon-blue);
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* SCHOOL COMMAND INTERFACE */
@@ -170,16 +202,19 @@
 
         .sidebar {
             width: 380px;
-            background-color: var(--panel-dark);
-            border-right: 1px solid var(--border-color);
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid var(--glass-border);
             display: flex;
             flex-direction: column;
+            z-index: 1000;
         }
 
         .sidebar-header {
             padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--glass-border);
             font-weight: 700;
+            color: var(--neon-blue);
         }
 
         .bus-list {
@@ -188,32 +223,27 @@
         }
 
         .bus-card {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
             cursor: pointer;
             transition: background 0.2s;
         }
 
         .bus-card:hover {
-            background-color: rgba(255, 255, 255, 0.05);
+            background: rgba(56, 189, 248, 0.1);
         }
 
         .bus-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .bus-number {
-            font-size: 1.1rem;
-            font-weight: 700;
+            margin-bottom: 0.3rem;
         }
 
         .badge {
-            padding: 0.25rem 0.6rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
             font-weight: 800;
             text-transform: uppercase;
         }
@@ -221,11 +251,7 @@
         .badge-green { background: var(--status-green); color: white; }
         .badge-yellow { background: var(--status-yellow); color: black; }
         .badge-orange { background: var(--status-orange); color: white; }
-        .badge-red { background: var(--status-red); color: white; animation: blink 1s infinite; }
-
-        @keyframes blink {
-            50% { opacity: 0.5; }
-        }
+        .badge-red { background: var(--status-red); color: white; animation: pulse 1s infinite; }
 
         .map-container {
             flex: 1;
@@ -235,24 +261,56 @@
         #map {
             width: 100%;
             height: 100%;
+            background: #091322;
+        }
+
+        /* CUSTOM SVG DOT MARKERS WITH FLASHING RED PULSE */
+        .svg-marker-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dot-circle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+        }
+
+        .dot-green { background-color: var(--status-green); box-shadow: 0 0 10px var(--status-green); }
+        .dot-yellow { background-color: var(--status-yellow); box-shadow: 0 0 10px var(--status-yellow); }
+        .dot-orange { background-color: var(--status-orange); box-shadow: 0 0 10px var(--status-orange); }
+        .dot-red { 
+            background-color: var(--status-red); 
+            box-shadow: 0 0 15px var(--status-red);
+            animation: flash-red 0.6s infinite alternate;
+        }
+
+        @keyframes flash-red {
+            0% { transform: scale(1); box-shadow: 0 0 5px var(--status-red); }
+            100% { transform: scale(1.6); box-shadow: 0 0 25px var(--status-red); }
         }
 
         .alert-banner {
             position: absolute;
-            top: 10px;
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1000;
-            background-color: var(--status-red);
+            z-index: 1500;
+            background: rgba(239, 68, 68, 0.95);
+            backdrop-filter: blur(8px);
             color: white;
-            padding: 1rem 2rem;
-            border-radius: 8px;
+            padding: 0.85rem 1.5rem;
+            border-radius: 12px;
             font-weight: 800;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             display: none;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
             align-items: center;
             gap: 1rem;
+            border: 1px solid #fca5a5;
         }
 
         .hidden { display: none !important; }
@@ -263,50 +321,59 @@
     <header>
         <div class="brand">
             <span class="brand-title">TACNET</span>
-            <span class="brand-subtitle">SCHOOL SAFETY</span>
+            <span class="brand-subtitle">SCHOOL SAFETY HUB</span>
         </div>
         <div class="view-toggle">
-            <button class="toggle-btn active" onclick="switchView('driver')">Bus Driver View</button>
-            <button class="toggle-btn" onclick="switchView('command')">School Office Monitor</button>
+            <button class="toggle-btn active" onclick="switchView('driver')">Bus Driver UI</button>
+            <button class="toggle-btn" onclick="switchView('command')">School Monitor (20 Buses)</button>
         </div>
     </header>
 
     <main>
-        <!-- BUS DRIVER MOBILE VIEW -->
+        <!-- BUS DRIVER MOBILE VIEW (NO MAP) -->
         <div id="driver-view">
-            <div class="driver-card">
-                <h2>Bus #142 - Amherst Central</h2>
-                <p style="color: var(--text-muted); margin-top: 0.25rem;">Driver: E. Wood | Route 9 North</p>
+            <div class="glass-panel driver-info">
+                <h2>Bus #20 - Amherst Central</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.2rem;">Driver: <strong>John Doe</strong> | Route 9 North</p>
             </div>
 
-            <div class="driver-card">
-                <p style="margin-bottom: 1rem; font-weight: 600;">Select Status Beacon</p>
+            <div class="glass-panel">
+                <p style="font-size: 0.85rem; font-weight: 700; color: var(--neon-blue); margin-bottom: 0.5rem; text-transform: uppercase;">Status Beacons</p>
                 <div class="status-grid">
-                    <button class="status-btn btn-green" onclick="updateBusStatus('GREEN')">
+                    <button class="status-btn btn-green" onclick="updateDriverStatus('GREEN')">
                         <span>GREEN</span>
-                        <small>Normal Operations</small>
+                        <small style="font-weight: normal; opacity: 0.9;">Normal Route</small>
                     </button>
-                    <button class="status-btn btn-yellow" onclick="updateBusStatus('YELLOW')">
+                    <button class="status-btn btn-yellow" onclick="updateDriverStatus('YELLOW')">
                         <span>YELLOW</span>
-                        <small>Route Delay</small>
+                        <small style="font-weight: normal; opacity: 0.9;">Route Delay</small>
                     </button>
-                    <button class="status-btn btn-orange" onclick="updateBusStatus('ORANGE')">
-                        <span>ORANGE</span>
-                        <small>School Comms</small>
+                    <button class="status-btn btn-orange" 
+                            onmousedown="startPTT()" onmouseup="stopPTT()" 
+                            ontouchstart="startPTT()" ontouchend="stopPTT()">
+                        <span>🎙️ ORANGE</span>
+                        <small style="font-weight: normal; opacity: 0.9;">Press & Hold Voice</small>
                     </button>
                     <button class="status-btn btn-red" onclick="triggerEmergency()">
-                        <span>EMERGENCY (RED)</span>
-                        <small>Immediate School Alert</small>
+                        <span>🚨 EMERGENCY (RED)</span>
+                        <small style="font-weight: normal; opacity: 0.9;">Instant School Alarm</small>
                     </button>
+                </div>
+            </div>
+
+            <div class="glass-panel ptt-box">
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Main Office Audio / Reply Feed:</p>
+                <div class="chat-bubble-area" id="driver-reply-box">
+                    "Channel Open - Ready for Comms"
                 </div>
             </div>
         </div>
 
-        <!-- SCHOOL COMMAND MONITOR VIEW -->
+        <!-- SCHOOL COMMAND MONITOR VIEW (20 LIVE BUSES) -->
         <div id="command-view" class="hidden">
             <div class="sidebar">
                 <div class="sidebar-header">
-                    Active Fleet Telemetry (Amherst District)
+                    Active Fleet Telemetry (20 Buses Online)
                 </div>
                 <div class="bus-list" id="bus-list">
                     <!-- Dynamic Bus Cards Inserted Here -->
@@ -314,28 +381,35 @@
             </div>
             <div class="map-container">
                 <div id="alert-banner" class="alert-banner">
-                    <span>⚠️ EMERGENCY ALARM: BUS #142 SIGNALED RED ALERT</span>
-                    <button onclick="acknowledgeAlert()" style="background: white; color: red; border: none; padding: 0.4rem 0.8rem; border-radius: 4px; font-weight: 700; cursor: pointer;">CONFIRM & CALL 911</button>
+                    <span id="alert-text">⚠️ RED EMERGENCY ALARM: BUS #20</span>
+                    <button onclick="acknowledgeAlert()" style="background: white; color: #dc2626; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 800; cursor: pointer;">ACKNOWLEDGE / CALL 911</button>
                 </div>
                 <div id="map"></div>
             </div>
         </div>
     </main>
 
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map;
-        let busMarker;
-        let busData = {
-            id: '142',
-            route: 'Route 9 North',
-            driver: 'E. Wood',
-            status: 'GREEN',
-            lat: 37.5854,
-            lng: -79.0514,
-            lastUpdate: 'Just now'
-        };
+        let busMarkers = {};
+        let fleetData = [];
+
+        // Generate 20 Simulated Buses for Amherst County District
+        const baseLat = 37.5854;
+        const baseLng = -79.0514;
+
+        for (let i = 1; i <= 20; i++) {
+            fleetData.push({
+                id: i === 20 ? '20' : (100 + i).toString(),
+                driver: i === 20 ? 'John Doe' : `Driver #${i}`,
+                route: `Route ${i}`,
+                status: 'GREEN',
+                lat: baseLat + (Math.random() - 0.5) * 0.08,
+                lng: baseLng + (Math.random() - 0.5) * 0.08,
+                lastMsg: ''
+            });
+        }
 
         function switchView(view) {
             const driverView = document.getElementById('driver-view');
@@ -353,7 +427,6 @@
                 btns[1].classList.add('active');
                 btns[0].classList.remove('active');
                 
-                // Initialize map if not already done
                 if (!map) {
                     setTimeout(initMap, 100);
                 }
@@ -361,63 +434,109 @@
         }
 
         function initMap() {
-            map = L.map('map').setView([busData.lat, busData.lng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            map = L.map('map').setView([baseLat, baseLng], 12);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap'
             }).addTo(map);
 
-            busMarker = L.marker([busData.lat, busData.lng]).addTo(map)
-                .bindPopup(`<b>Bus #${busData.id}</b><br>Status: ${busData.status}`)
-                .openPopup();
+            renderFleetOnMap();
+            renderSidebar();
 
-            renderBusList();
+            // Simulate GPS Movement every 3 seconds
+            setInterval(simulateMovement, 3000);
         }
 
-        function updateBusStatus(status) {
-            busData.status = status;
-            busData.lastUpdate = new Date().toLocaleTimeString();
+        function getDotIcon(status) {
+            return L.divIcon({
+                className: 'svg-marker-icon',
+                html: `<div class="dot-circle dot-${status.toLowerCase()}"></div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+        }
 
-            if (status === 'RED') {
-                document.getElementById('alert-banner').style.display = 'flex';
-            } else {
-                document.getElementById('alert-banner').style.display = 'none';
-            }
+        function renderFleetOnMap() {
+            fleetData.forEach(bus => {
+                const marker = L.marker([bus.lat, bus.lng], { icon: getDotIcon(bus.status) }).addTo(map);
+                marker.bindPopup(`<b>Bus #${bus.id}</b><br>Driver: ${bus.driver}<br>Status: <strong style="color:var(--status-${bus.status.toLowerCase()})">${bus.status}</strong>`);
+                busMarkers[bus.id] = marker;
+            });
+        }
 
-            if (map && busMarker) {
-                busMarker.setPopupContent(`<b>Bus #${busData.id}</b><br>Status: ${busData.status}`);
+        function updateFleetMap() {
+            fleetData.forEach(bus => {
+                if (busMarkers[bus.id]) {
+                    busMarkers[bus.id].setLatLng([bus.lat, bus.lng]);
+                    busMarkers[bus.id].setIcon(getDotIcon(bus.status));
+                    busMarkers[bus.id].setPopupContent(`<b>Bus #${bus.id}</b><br>Driver: ${bus.driver}<br>Status: <strong>${bus.status}</strong>`);
+                }
+            });
+            renderSidebar();
+        }
+
+        function simulateMovement() {
+            fleetData.forEach(bus => {
+                // Subtle random position drift simulating motion along roads
+                bus.lat += (Math.random() - 0.5) * 0.001;
+                bus.lng += (Math.random() - 0.5) * 0.001;
+            });
+            updateFleetMap();
+        }
+
+        function updateDriverStatus(status) {
+            const bus20 = fleetData.find(b => b.id === '20');
+            if (bus20) {
+                bus20.status = status;
+                if (status !== 'RED') {
+                    document.getElementById('alert-banner').style.display = 'none';
+                }
+                updateFleetMap();
             }
-            renderBusList();
+        }
+
+        function startPTT() {
+            updateDriverStatus('ORANGE');
+            document.getElementById('driver-reply-box').innerText = "🎙️ TRANSMITTING VOICE TO SCHOOL OFFICE...";
+        }
+
+        function stopPTT() {
+            document.getElementById('driver-reply-box').innerText = "Audio Sent. Office Reply: \"Copy that John, route updated.\"";
         }
 
         function triggerEmergency() {
-            updateBusStatus('RED');
-            alert('EMERGENCY ALERT TRANSMITTED TO SCHOOL MAIN OFFICE MONITOR.');
+            updateDriverStatus('RED');
+            document.getElementById('alert-banner').style.display = 'flex';
+            document.getElementById('alert-text').innerText = "⚠️ EMERGENCY ALARM: BUS #20 (JOHN DOE) SIGNALED RED ALERT";
+            alert("EMERGENCY SIGNAL TRANSMITTED TO SCHOOL COMMAND MONITOR!");
         }
 
         function acknowledgeAlert() {
             document.getElementById('alert-banner').style.display = 'none';
         }
 
-        function renderBusList() {
+        function renderSidebar() {
             const listContainer = document.getElementById('bus-list');
             if (!listContainer) return;
 
-            let badgeClass = 'badge-green';
-            if (busData.status === 'YELLOW') badgeClass = 'badge-yellow';
-            if (busData.status === 'ORANGE') badgeClass = 'badge-orange';
-            if (busData.status === 'RED') badgeClass = 'badge-red';
-
-            listContainer.innerHTML = `
-                <div class="bus-card" style="border-left: 6px solid var(--status-${busData.status.toLowerCase()});">
+            listContainer.innerHTML = fleetData.map(bus => `
+                <div class="bus-card" onclick="focusBus('${bus.id}')" style="border-left: 4px solid var(--status-${bus.status.toLowerCase()});">
                     <div class="bus-card-header">
-                        <span class="bus-number">Bus #${busData.id}</span>
-                        <span class="badge ${badgeClass}">${busData.status}</span>
+                        <strong style="color:white;">Bus #${bus.id}</strong>
+                        <span class="badge badge-${bus.status.toLowerCase()}">${bus.status}</span>
                     </div>
-                    <p style="font-size: 0.85rem; color: var(--text-muted);">${busData.route} | Driver: ${busData.driver}</p>
-                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">Updated: ${busData.lastUpdate}</p>
+                    <p style="font-size: 0.8rem; color: var(--text-muted);">${bus.route} | ${bus.driver}</p>
                 </div>
-            `;
+            `).join('');
+        }
+
+        function focusBus(id) {
+            const bus = fleetData.find(b => b.id === id);
+            if (bus && map) {
+                map.setView([bus.lat, bus.lng], 15);
+                busMarkers[id].openPopup();
+            }
         }
     </script>
 </body>
