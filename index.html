@@ -531,7 +531,7 @@
         const baseLat = 37.5815;
         const baseLng = -79.0506;
 
-        // Initialize 20 completely blank bus slots for the school centered in Amherst County
+        // Initialize all 20 bus slots locked within Amherst County, VA
         for (let i = 1; i <= 20; i++) {
             fleetData.push({
                 slotIndex: i,
@@ -541,25 +541,6 @@
                 lat: baseLat + (Math.random() - 0.5) * 0.08,
                 lng: baseLng + (Math.random() - 0.5) * 0.08
             });
-        }
-
-        // CONTINUOUS GPS - LIMITED ONLY TO LOCAL DEVICE IF IN VIRGINIA AREA
-        function startContinuousGPS() {
-            if ("geolocation" in navigator) {
-                navigator.geolocation.watchPosition(
-                    (position) => {
-                        const activeBus = fleetData[0];
-                        // Only update live device GPS if latitude is within Virginia bounds
-                        if (activeBus && position.coords.latitude > 36.5 && position.coords.latitude < 39.5) {
-                            activeBus.lat = position.coords.latitude;
-                            activeBus.lng = position.coords.longitude;
-                            updateFleetMap();
-                        }
-                    },
-                    (error) => console.warn("GPS High-Precision Fallback Active"),
-                    { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-                );
-            }
         }
 
         function populateBusSelectDropdown() {
@@ -605,7 +586,6 @@
             document.getElementById('input-bus-id').select();
         }
 
-        // RESET / CLEAR BUTTON FUNCTION
         function clearSelectedSlot() {
             const idx = parseInt(document.getElementById('select-bus-slot').value);
             fleetData[idx].id = '';
@@ -649,8 +629,8 @@
         }
 
         function initMap() {
-            // SETTING THE MAP TO CENTER DIRECTLY ON AMHERST, VA AT ZOOM LEVEL 13
-            map = L.map('map').setView([baseLat, baseLng], 13);
+            // LOCK MAP CENTER DIRECTLY ON AMHERST COUNTY, VA
+            map = L.map('map').setView([baseLat, baseLng], 12);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
@@ -786,14 +766,13 @@
         function focusBus(slotIndex) {
             const bus = fleetData.find(b => b.slotIndex == slotIndex);
             if (bus && map) {
-                map.setView([bus.lat, bus.lng], 15);
+                map.setView([bus.lat, bus.lng], 14);
                 busMarkers[slotIndex].openPopup();
             }
         }
 
         window.onload = () => {
             populateBusSelectDropdown();
-            startContinuousGPS();
         };
     </script>
 </body>
