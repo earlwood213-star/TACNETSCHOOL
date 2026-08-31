@@ -531,7 +531,7 @@
         const baseLat = 37.5815;
         const baseLng = -79.0506;
 
-        // Initialize 20 completely blank bus slots for the school
+        // Initialize 20 completely blank bus slots for the school centered in Amherst County
         for (let i = 1; i <= 20; i++) {
             fleetData.push({
                 slotIndex: i,
@@ -543,13 +543,14 @@
             });
         }
 
-        // CONTINUOUS ALWAYS-ON GPS BACKBONE
+        // CONTINUOUS GPS - LIMITED ONLY TO LOCAL DEVICE IF IN VIRGINIA AREA
         function startContinuousGPS() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
                     (position) => {
                         const activeBus = fleetData[0];
-                        if (activeBus) {
+                        // Only update live device GPS if latitude is within Virginia bounds
+                        if (activeBus && position.coords.latitude > 36.5 && position.coords.latitude < 39.5) {
                             activeBus.lat = position.coords.latitude;
                             activeBus.lng = position.coords.longitude;
                             updateFleetMap();
@@ -710,11 +711,9 @@
         }
 
         function simulateMovement() {
-            fleetData.forEach((bus, i) => {
-                if (i !== 0 || !navigator.geolocation) {
-                    bus.lat += (Math.random() - 0.5) * 0.001;
-                    bus.lng += (Math.random() - 0.5) * 0.001;
-                }
+            fleetData.forEach((bus) => {
+                bus.lat += (Math.random() - 0.5) * 0.001;
+                bus.lng += (Math.random() - 0.5) * 0.001;
             });
             updateFleetMap();
         }
