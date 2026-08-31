@@ -304,6 +304,11 @@
         .config-inputs select { width: 40%; font-weight: bold; }
         .config-inputs input { width: 60%; }
 
+        .config-action-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
         .config-btn {
             background: var(--neon-blue);
             color: #000;
@@ -313,13 +318,27 @@
             font-weight: bold;
             font-size: 0.85rem;
             cursor: pointer;
-            width: 100%;
+            flex: 2;
             box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
             transition: all 0.2s;
         }
 
-        .config-btn:active {
-            transform: scale(0.98);
+        .clear-slot-btn {
+            background: rgba(239, 68, 68, 0.3);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 0.55rem;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.2s;
+        }
+
+        .clear-slot-btn:active {
+            background: #ef4444;
+            color: #fff;
         }
 
         .bus-list {
@@ -465,7 +484,7 @@
         <!-- SCHOOL COMMAND MONITOR -->
         <div id="command-view" class="hidden">
             <div class="sidebar">
-                <!-- SCHOOL FLEET CONFIGURATOR -->
+                <!-- SCHOOL FLEET CONFIGURATOR WITH RESET/CLEAR -->
                 <div class="config-box">
                     <div class="config-title">✏️ ENTER DISTRICT BUS NUMBERS</div>
                     <div class="config-inputs">
@@ -477,7 +496,10 @@
                     <div class="config-inputs">
                         <input type="text" id="input-bus-driver" placeholder="Driver Name (Optional)" style="width: 100%;">
                     </div>
-                    <button class="config-btn" onclick="saveCustomBusNumber()">Save & Advance to Next Bus ➔</button>
+                    <div class="config-action-row">
+                        <button class="config-btn" onclick="saveCustomBusNumber()">Save & Next ➔</button>
+                        <button class="clear-slot-btn" onclick="clearSelectedSlot()">🗑️ Reset Slot</button>
+                    </div>
                 </div>
 
                 <div style="padding: 0.75rem 1rem; font-weight: bold; color: var(--neon-blue); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
@@ -512,8 +534,8 @@
         for (let i = 1; i <= 20; i++) {
             fleetData.push({
                 slotIndex: i,
-                id: '', // Blank - user fills in
-                driver: '', // Blank - user fills in
+                id: '', // Blank
+                driver: '', // Blank
                 status: 'GREEN',
                 lat: baseLat + (Math.random() - 0.5) * 0.08,
                 lng: baseLng + (Math.random() - 0.5) * 0.08
@@ -525,7 +547,7 @@
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
                     (position) => {
-                        const activeBus = fleetData[0]; // Primary slot tracking
+                        const activeBus = fleetData[0];
                         if (activeBus) {
                             activeBus.lat = position.coords.latitude;
                             activeBus.lng = position.coords.longitude;
@@ -562,16 +584,14 @@
             fleetData[idx].id = newId;
             fleetData[idx].driver = newDriver;
 
-            // Update driver UI if Slot 1 was modified
             if (idx === 0) {
                 document.getElementById('driver-bus-title').innerText = newId ? `Bus #${newId}` : `Slot #1 (Unassigned)`;
                 document.getElementById('driver-name-text').innerText = newDriver || 'Unassigned';
             }
 
-            // ADVANCE AUTOMATICALLY TO THE NEXT SLOT DOWN THE LIST
             let nextIdx = idx + 1;
             if (nextIdx >= fleetData.length) {
-                nextIdx = 0; // Wrap back to Slot 1 if at the end
+                nextIdx = 0;
             }
 
             populateBusSelectDropdown();
@@ -579,9 +599,29 @@
             loadBusConfigValues();
             updateFleetMap();
 
-            // Auto-focus input for fast consecutive entry
             document.getElementById('input-bus-id').focus();
             document.getElementById('input-bus-id').select();
+        }
+
+        // RESET / CLEAR BUTTON FUNCTION
+        function clearSelectedSlot() {
+            const idx = parseInt(document.getElementById('select-bus-slot').value);
+            fleetData[idx].id = '';
+            fleetData[idx].driver = '';
+
+            if (idx === 0) {
+                document.getElementById('driver-bus-title').innerText = `Slot #1 (Unassigned)`;
+                document.getElementById('driver-name-text').innerText = 'Unassigned';
+            }
+
+            document.getElementById('input-bus-id').value = '';
+            document.getElementById('input-bus-driver').value = '';
+
+            populateBusSelectDropdown();
+            document.getElementById('select-bus-slot').value = idx;
+            updateFleetMap();
+
+            document.getElementById('input-bus-id').focus();
         }
 
         function switchView(view) {
