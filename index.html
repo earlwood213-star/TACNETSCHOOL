@@ -6,701 +6,300 @@
     <title>TACNET School - Live GPS & Intercom Safety Platform</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root {
-            --bg-royal-blue: #0424d9;
-            --panel-glass: rgba(10, 50, 160, 0.55);
-            --panel-border: rgba(56, 189, 248, 0.6);
-            --neon-blue: #00f0ff;
-            --text-light: #ffffff;
-            --text-muted: #94a3b8;
-            --status-green: #22c55e;
-            --status-yellow: #eab308;
-            --status-orange: #f97316;
-            --status-red: #ef4444;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #021078 0%, #0424d9 100%);
-            color: var(--text-light);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        header {
-            background: rgba(2, 16, 120, 0.85);
-            backdrop-filter: blur(12px);
-            padding: 0.8rem 1.5rem;
-            border-bottom: 2px solid var(--panel-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background: #021078; color: #ffffff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        header { 
+            background: #010a4a; 
+            padding: 10px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid #00f0ff; 
             height: 60px;
         }
+        .title { font-size: 20px; font-weight: bold; color: #00f0ff; }
+        .nav-btn { 
+            background: #0a32a0; 
+            color: #fff; 
+            border: 1px solid #00f0ff; 
+            padding: 8px 16px; 
+            border-radius: 6px; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+        .nav-btn.active { background: #00f0ff; color: #000; }
 
-        .brand-title {
-            font-size: 1.5rem;
-            font-weight: 900;
-            letter-spacing: 1px;
-            color: var(--neon-blue);
-            text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .gps-pulse-badge {
-            background: rgba(34, 197, 94, 0.25);
-            border: 1px solid var(--status-green);
-            color: #4ade80;
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .gps-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--status-green);
-            border-radius: 50%;
-            animation: pulse-dot 1s infinite alternate;
-        }
-
-        @keyframes pulse-dot {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            100% { transform: scale(1.4); opacity: 1; }
-        }
-
-        .toggle-btn {
-            background: var(--panel-glass);
-            border: 1px solid var(--panel-border);
-            color: var(--text-light);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-
-        .toggle-btn.active {
-            background: var(--neon-blue);
-            color: #000;
-            box-shadow: 0 0 15px var(--neon-blue);
-        }
-
-        main {
-            display: flex;
-            flex: 1;
-            position: relative;
-            height: calc(100vh - 60px);
-        }
-
-        /* BUS DRIVER UI */
-        #driver-view {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            max-width: 440px;
-            margin: auto;
-            padding: 1rem;
-            gap: 0.85rem;
-            overflow-y: auto;
-        }
-
-        .glass-box {
-            background: var(--panel-glass);
-            backdrop-filter: blur(16px);
-            border: 2px solid var(--panel-border);
-            border-radius: 16px;
-            padding: 1rem;
-            box-shadow: 0 8px 32px 0 rgba(0, 100, 255, 0.37);
-        }
-
-        .safety-banner {
-            background: linear-gradient(90deg, rgba(234, 179, 8, 0.2) 0%, rgba(34, 197, 94, 0.2) 100%);
-            border: 2px solid #eab308;
-            border-radius: 12px;
-            padding: 0.75rem;
-            text-align: center;
-            box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
-        }
-
-        .safety-banner p {
-            color: #fef08a;
-            font-weight: 900;
-            font-size: 0.9rem;
-            letter-spacing: 0.5px;
-            text-shadow: 0 0 8px rgba(0,0,0,0.8);
-        }
-
-        .status-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        .status-btn {
-            border: 2px solid transparent;
-            border-radius: 12px;
-            padding: 1.1rem 0.5rem;
-            font-weight: 800;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.3rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            user-select: none;
-            transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
-            opacity: 0.75;
-        }
-
-        .status-btn:active {
-            transform: scale(0.93) !important;
-            filter: brightness(1.3);
-        }
-
-        .status-btn.active-green {
-            opacity: 1.0;
-            border-color: #ffffff;
-            box-shadow: 0 0 20px #22c55e, inset 0 0 10px #ffffff;
-            transform: scale(1.03);
-        }
-        .status-btn.active-yellow {
-            opacity: 1.0;
-            border-color: #ffffff;
-            box-shadow: 0 0 20px #eab308, inset 0 0 10px #ffffff;
-            transform: scale(1.03);
-        }
-        .status-btn.active-orange {
-            opacity: 1.0;
-            border-color: #ffffff;
-            box-shadow: 0 0 25px #f97316, inset 0 0 12px #ffffff;
-            transform: scale(1.03);
-        }
-        .status-btn.active-red {
-            opacity: 1.0;
-            border-color: #ffffff;
-            box-shadow: 0 0 30px #ef4444, inset 0 0 15px #ffffff;
-            transform: scale(1.03);
-            animation: pulse-red 0.8s infinite alternate;
-        }
-
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 15px #ef4444; }
-            100% { box-shadow: 0 0 35px #ef4444, 0 0 10px #fff; }
-        }
-
-        .btn-green { background: #16a34a; border-color: #4ade80; }
-        .btn-yellow { background: #ca8a04; color: #000; border-color: #fde047; }
-        .btn-orange { background: #ea580c; border-color: #ff8c00; }
-        .btn-red { 
-            background: #dc2626; 
-            border-color: #fca5a5;
-            grid-column: span 2; 
-            padding: 1.25rem; 
-            font-size: 1.2rem;
-        }
-
-        .reset-btn {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid #fff;
-            color: white;
-            padding: 0.5rem;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 0.5rem;
-            width: 100%;
-        }
-
-        .reply-box {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--neon-blue);
-            border-radius: 8px;
-            padding: 0.65rem;
-            margin-top: 0.4rem;
-            color: var(--neon-blue);
-            font-size: 0.9rem;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .credits-footer {
-            font-size: 0.75rem;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            padding-top: 0.5rem;
-            margin-top: 0.5rem;
-        }
-
-        .disclaimer-text {
-            font-size: 0.65rem;
-            color: rgba(255, 255, 255, 0.6);
-            margin-top: 0.25rem;
-            line-height: 1.2;
-        }
-
-        /* SCHOOL MONITOR UI */
-        #command-view {
-            display: flex;
-            width: 100%;
-            height: 100%;
-        }
-
-        .sidebar {
-            width: 380px;
-            min-width: 380px;
-            background: var(--panel-glass);
-            backdrop-filter: blur(16px);
-            border-right: 2px solid var(--panel-border);
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-            height: 100%;
-        }
-
-        .config-box {
-            padding: 0.85rem;
-            border-bottom: 2px solid var(--panel-border);
-            background: rgba(0, 0, 0, 0.35);
-        }
-
-        .config-title {
-            font-size: 0.85rem;
-            font-weight: 900;
-            color: var(--neon-blue);
-            margin-bottom: 0.5rem;
-            letter-spacing: 0.5px;
-        }
-
-        .config-inputs {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .config-inputs select, .config-inputs input {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--panel-border);
-            color: #fff;
-            padding: 0.5rem 0.6rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-        }
-
-        .config-inputs select { width: 40%; font-weight: bold; }
-        .config-inputs input { width: 60%; }
-
-        .config-action-row {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .config-btn {
-            background: var(--neon-blue);
-            color: #000;
-            border: none;
-            padding: 0.55rem;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 0.85rem;
-            cursor: pointer;
-            flex: 2;
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
-        }
-
-        .clear-slot-btn {
-            background: rgba(239, 68, 68, 0.3);
-            border: 1px solid #ef4444;
-            color: #fca5a5;
-            padding: 0.55rem;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 0.8rem;
-            cursor: pointer;
-            flex: 1;
-        }
-
-        .intercom-box {
-            padding: 0.85rem;
-            border-bottom: 2px solid var(--panel-border);
-            background: rgba(249, 115, 22, 0.15);
-        }
-
-        .intercom-title {
-            font-size: 0.85rem;
-            font-weight: 900;
-            color: #ffaa55;
-            margin-bottom: 0.4rem;
-        }
-
-        .intercom-btn {
-            background: #f97316;
-            color: white;
-            border: 1px solid #ffaa55;
-            padding: 0.65rem;
-            border-radius: 8px;
-            font-weight: 800;
-            width: 100%;
-            cursor: pointer;
-            box-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
-        }
-
-        .bus-list {
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .bus-card {
-            padding: 0.85rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
-        }
-
-        .bus-card:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .badge {
-            padding: 0.2rem 0.5rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 900;
-        }
-
-        .map-container {
-            flex: 1;
-            position: relative;
-            height: 100%;
-            min-height: 400px;
-            background: #021078;
-        }
-
-        #map {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
-
-        .dot-circle {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            border: 2px solid #ffffff;
-        }
-        .dot-green { background-color: var(--status-green); box-shadow: 0 0 10px var(--status-green); }
-        .dot-yellow { background-color: var(--status-yellow); box-shadow: 0 0 10px var(--status-yellow); }
-        .dot-orange { background-color: var(--status-orange); box-shadow: 0 0 10px var(--status-orange); }
-        .dot-red { 
-            background-color: var(--status-red); 
-            box-shadow: 0 0 20px var(--status-red);
-            animation: flash 0.5s infinite alternate;
-        }
-
-        @keyframes flash {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.6); }
-        }
-
-        .alert-banner {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2000;
-            background: #dc2626;
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-weight: bold;
-            display: none;
-            box-shadow: 0 0 30px rgba(255,0,0,0.8);
-            border: 2px solid #fff;
-        }
-
+        #container { display: flex; flex: 1; height: calc(100vh - 60px); position: relative; }
+        
+        /* VIEWS */
+        .view-panel { width: 100%; height: 100%; display: flex; }
         .hidden { display: none !important; }
+
+        /* DRIVER VIEW */
+        #driver-view { max-width: 450px; margin: auto; flex-direction: column; gap: 15px; padding: 20px; }
+        .card { background: rgba(10, 50, 160, 0.6); border: 2px solid #00f0ff; border-radius: 12px; padding: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        
+        .btn-status { 
+            padding: 15px; border-radius: 8px; border: none; font-weight: bold; color: white; cursor: pointer; text-align: center; 
+        }
+        .btn-green { background: #22c55e; }
+        .btn-yellow { background: #eab308; color: #000; }
+        .btn-orange { background: #f97316; }
+        .btn-red { background: #ef4444; grid-column: span 2; font-size: 18px; }
+
+        /* COMMAND MONITOR VIEW */
+        .sidebar { width: 380px; background: #010a4a; border-right: 2px solid #00f0ff; display: flex; flex-direction: column; }
+        .panel-box { padding: 12px; border-bottom: 1px solid #00f0ff; }
+        .input-row { display: flex; gap: 5px; margin-top: 5px; }
+        .input-row input, .input-row select { background: #000; color: #fff; border: 1px solid #00f0ff; padding: 6px; border-radius: 4px; flex: 1; }
+        
+        .action-btn { background: #00f0ff; color: #000; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
+        .intercom-btn { background: #f97316; color: #fff; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
+
+        .bus-list { flex: 1; overflow-y: auto; }
+        .bus-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; display: flex; justify-content: space-between; }
+
+        .map-box { flex: 1; height: 100%; background: #000; position: relative; }
+        #map { width: 100%; height: 100%; }
+
+        .badge { padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-GREEN { background: #22c55e; }
+        .badge-YELLOW { background: #eab308; color: #000; }
+        .badge-ORANGE { background: #f97316; }
+        .badge-RED { background: #ef4444; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="brand-title">
-            TACNET SCHOOL
-            <div class="gps-pulse-badge">
-                <div class="gps-dot"></div> GPS LIVE STREAMING
-            </div>
-        </div>
+        <div class="title">TACNET SCHOOL GPS</div>
         <div>
-            <button id="btn-view-driver" class="toggle-btn active" onclick="switchView('driver')">Bus Driver View</button>
-            <button id="btn-view-command" class="toggle-btn" onclick="switchView('command')">School Main Monitor</button>
+            <button id="tab-driver" class="nav-btn active" onclick="showView('driver')">Bus Driver View</button>
+            <button id="tab-command" class="nav-btn" onclick="showView('command')">School Main Monitor</button>
         </div>
     </header>
 
-    <main>
-        <div id="driver-view">
-            <div class="safety-banner">
-                <p>⚠️ WATCH YOUR SURROUNDINGS AND DRIVE SAFELY! 🛑</p>
+    <div id="container">
+        <div id="driver-view" class="view-panel">
+            <div class="card">
+                <h2 id="driver-bus-title" style="color: #00f0ff;">Slot #1 (Unassigned)</h2>
+                <p>Status: Active GPS Beacon</p>
             </div>
-
-            <div class="glass-box">
-                <h2 style="color: var(--neon-blue);" id="driver-bus-title">Slot #1 (Unassigned)</h2>
-                <p>Status: Active GPS Beacon | Driver: <strong id="driver-name-text">Unassigned</strong></p>
-            </div>
-
-            <div class="glass-box">
-                <p style="font-size: 0.85rem; font-weight: bold; color: var(--neon-blue);">BEACON STATUS</p>
-                <div class="status-grid">
-                    <button id="btn-GREEN" class="status-btn btn-green active-green" onclick="updateDriverStatus('GREEN')">
-                        <span>GREEN</span>
-                        <small>Normal Ops</small>
-                    </button>
-                    <button id="btn-YELLOW" class="status-btn btn-yellow" onclick="updateDriverStatus('YELLOW')">
-                        <span>YELLOW</span>
-                        <small>Delay / Issue</small>
-                    </button>
-                    <button id="btn-ORANGE" class="status-btn btn-orange" 
-                            onmousedown="startPTT()" onmouseup="stopPTT()"
-                            ontouchstart="startPTT()" ontouchend="stopPTT()">
-                        <span>🎙️ ORANGE</span>
-                        <small>Hold to Talk</small>
-                    </button>
-                    <button id="btn-RED" class="status-btn btn-red" onclick="triggerEmergency()">
-                        <span>🚨 EMERGENCY (RED)</span>
-                    </button>
+            <div class="card">
+                <p><b>BEACON STATUS CONTROLS</b></p>
+                <div class="grid">
+                    <button class="btn-status btn-green" onclick="setDriverStatus('GREEN')">GREEN<br><small>Normal</small></button>
+                    <button class="btn-status btn-yellow" onclick="setDriverStatus('YELLOW')">YELLOW<br><small>Delay</small></button>
+                    <button class="btn-status btn-orange" onmousedown="holdOrange()" onmouseup="releaseOrange()">🎙️ ORANGE<br><small>Hold to Talk</small></button>
+                    <button class="btn-status btn-red" onclick="setDriverStatus('RED')">🚨 RED EMERGENCY</button>
                 </div>
             </div>
-
-            <div class="glass-box">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">Office Voice Feed:</p>
-                <div class="reply-box" id="driver-reply-box">
-                    "Channel Ready"
-                </div>
-                <button class="reset-btn" onclick="resetDriverSystem()">🔄 Reset / Clear Status</button>
-                
-                <div class="credits-footer">
-                    <strong>Created by Deputy Sheriff Retired Earl Wood, Virginia</strong><br>
-                    <span style="color: var(--neon-blue); font-weight: bold;">PATENT PENDING</span>
-                    <div class="disclaimer-text">
-                        Disclaimer: TACNET School is an independent transportation safety & coordination portal designed for district administrative communication. Emergency RED alerts require verification by designated school personnel prior to law enforcement dispatch.
-                    </div>
-                </div>
+            <div class="card">
+                <p><b>Dispatch Feed:</b></p>
+                <div id="driver-reply" style="color: #00f0ff; margin-top: 5px; font-weight: bold;">"Channel Ready"</div>
             </div>
         </div>
 
-        <div id="command-view" class="hidden">
+        <div id="command-view" class="view-panel hidden">
             <div class="sidebar">
-                <div class="config-box">
-                    <div class="config-title">✏️ ENTER DISTRICT BUS NUMBERS</div>
-                    <div class="config-inputs">
-                        <select id="select-bus-slot" onchange="loadBusConfigValues()"></select>
-                        <input type="text" id="input-bus-id" placeholder="Bus # (e.g. 104)">
+                <div class="panel-box">
+                    <p style="color: #00f0ff; font-weight: bold;">✏️ ASSIGN BUS NUMBERS</p>
+                    <div class="input-row">
+                        <select id="select-slot" onchange="loadSlotData()"></select>
+                        <input type="text" id="input-bus-num" placeholder="Bus # (e.g. 104)">
                     </div>
-                    <div class="config-inputs">
-                        <input type="text" id="input-bus-driver" placeholder="Driver Name (Optional)" style="width: 100%;">
-                    </div>
-                    <div class="config-action-row">
-                        <button class="config-btn" onclick="saveCustomBusNumber()">Save & Next ➔</button>
-                        <button class="clear-slot-btn" onclick="clearSelectedSlot()">🗑️ Reset</button>
-                    </div>
+                    <button class="action-btn" onclick="saveSlotData()">Save Bus Number</button>
                 </div>
 
-                <div class="intercom-box">
-                    <div class="intercom-title">🎙️ DISPATCH VOICE INTERCOM (ORANGE)</div>
-                    <div class="config-inputs">
-                        <select id="select-talk-bus" style="width: 100%;"></select>
+                <div class="panel-box" style="background: rgba(249, 115, 22, 0.15);">
+                    <p style="color: #f97316; font-weight: bold;">🎙️ DISPATCH TALK BACK (ORANGE)</p>
+                    <div class="input-row">
+                        <select id="select-talk-slot"></select>
                     </div>
-                    <div class="config-inputs">
-                        <input type="text" id="input-dispatch-msg" placeholder="Message or Speak Audio..." style="width: 100%;" value="Copy that, proceed with caution.">
+                    <div class="input-row">
+                        <input type="text" id="input-msg" value="Copy that, proceed with caution.">
                     </div>
-                    <button class="intercom-btn" onmousedown="transmitDispatchVoice()" ontouchstart="transmitDispatchVoice()">
-                        🎙️ HOLD TO TRANSMIT TO DRIVER
-                    </button>
+                    <button class="intercom-btn" onclick="transmitToDriver()">🎙️ TRANSMIT TO DRIVER</button>
                 </div>
 
-                <div style="padding: 0.75rem 1rem; font-weight: bold; color: var(--neon-blue); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
-                    Active Bus Fleet (20 Slots Online)
-                </div>
+                <div style="padding: 10px; font-weight: bold; color: #00f0ff;">Active Bus Fleet (20 Slots)</div>
                 <div class="bus-list" id="bus-list"></div>
-                <div class="credits-footer" style="padding: 0.75rem; background: rgba(0,0,0,0.2);">
-                    <strong>Created by Deputy Sheriff Retired Earl Wood, Virginia</strong> | <span style="color: var(--neon-blue);">PATENT PENDING</span>
-                </div>
             </div>
-            <div class="map-container">
-                <div id="alert-banner" class="alert-banner">
-                    <span id="alert-text">⚠️ EMERGENCY ALARM</span>
-                    <button onclick="acknowledgeAlert()" style="margin-left: 15px; padding: 0.3rem 0.8rem; border-radius: 6px; border: none; font-weight: bold; cursor: pointer;">CONFIRM / CALL 911</button>
-                </div>
+
+            <div class="map-box">
                 <div id="map"></div>
             </div>
         </div>
-    </main>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         let map = null;
         let busMarkers = {};
-        let fleetData = [];
+        let fleet = [];
 
         const baseLat = 37.5815;
         const baseLng = -79.0506;
 
+        // Populate 20 slots
         for (let i = 1; i <= 20; i++) {
-            fleetData.push({
-                slotIndex: i,
-                id: '', 
-                driver: '', 
+            fleet.push({
+                slot: i,
+                id: '',
                 status: 'GREEN',
-                lat: baseLat + (Math.random() - 0.5) * 0.08,
-                lng: baseLng + (Math.random() - 0.5) * 0.08
+                lat: baseLat + (Math.random() - 0.5) * 0.06,
+                lng: baseLng + (Math.random() - 0.5) * 0.06
             });
         }
 
-        function populateBusSelectDropdown() {
-            const select = document.getElementById('select-bus-slot');
-            const talkSelect = document.getElementById('select-talk-bus');
-
-            const optionsHTML = fleetData.map((bus, idx) => {
-                const labelText = bus.id ? `Slot #${bus.slotIndex} (Bus ${bus.id})` : `Slot #${bus.slotIndex} [EMPTY]`;
-                return `<option value="${idx}">${labelText}</option>`;
-            }).join('');
-
-            if (select) select.innerHTML = optionsHTML;
-            if (talkSelect) talkSelect.innerHTML = optionsHTML;
-
-            loadBusConfigValues();
-        }
-
-        function loadBusConfigValues() {
-            const select = document.getElementById('select-bus-slot');
-            if (!select) return;
-            const idx = select.value;
-            const bus = fleetData[idx];
-            if (bus) {
-                document.getElementById('input-bus-id').value = bus.id;
-                document.getElementById('input-bus-driver').value = bus.driver;
-            }
-        }
-
-        function saveCustomBusNumber() {
-            const idx = parseInt(document.getElementById('select-bus-slot').value);
-            const newId = document.getElementById('input-bus-id').value.trim();
-            const newDriver = document.getElementById('input-bus-driver').value.trim();
-
-            fleetData[idx].id = newId;
-            fleetData[idx].driver = newDriver;
-
-            if (idx === 0) {
-                document.getElementById('driver-bus-title').innerText = newId ? `Bus #${newId}` : `Slot #1 (Unassigned)`;
-                document.getElementById('driver-name-text').innerText = newDriver || 'Unassigned';
-            }
-
-            let nextIdx = idx + 1;
-            if (nextIdx >= fleetData.length) nextIdx = 0;
-
-            populateBusSelectDropdown();
-            document.getElementById('select-bus-slot').value = nextIdx;
-            loadBusConfigValues();
-            updateFleetMap();
-
-            document.getElementById('input-bus-id').focus();
-            document.getElementById('input-bus-id').select();
-        }
-
-        function clearSelectedSlot() {
-            const idx = parseInt(document.getElementById('select-bus-slot').value);
-            fleetData[idx].id = '';
-            fleetData[idx].driver = '';
-
-            if (idx === 0) {
-                document.getElementById('driver-bus-title').innerText = `Slot #1 (Unassigned)`;
-                document.getElementById('driver-name-text').innerText = 'Unassigned';
-            }
-
-            document.getElementById('input-bus-id').value = '';
-            document.getElementById('input-bus-driver').value = '';
-
-            populateBusSelectDropdown();
-            document.getElementById('select-bus-slot').value = idx;
-            updateFleetMap();
-
-            document.getElementById('input-bus-id').focus();
-        }
-
-        function switchView(view) {
+        function showView(viewName) {
             const driverView = document.getElementById('driver-view');
             const commandView = document.getElementById('command-view');
-            const btnDriver = document.getElementById('btn-view-driver');
-            const btnCommand = document.getElementById('btn-view-command');
+            const tabDriver = document.getElementById('tab-driver');
+            const tabCommand = document.getElementById('tab-command');
 
-            if (view === 'driver') {
+            if (viewName === 'driver') {
                 driverView.classList.remove('hidden');
                 commandView.classList.add('hidden');
-                btnDriver.classList.add('active');
-                btnCommand.classList.remove('active');
+                tabDriver.classList.add('active');
+                tabCommand.classList.remove('active');
             } else {
                 driverView.classList.add('hidden');
                 commandView.classList.remove('hidden');
-                btnCommand.classList.add('active');
-                btnDriver.classList.remove('active');
-                
+                tabCommand.classList.add('active');
+                tabDriver.classList.remove('active');
+
                 if (!map) {
-                    initMap();
+                    initMapSystem();
                 } else {
-                    setTimeout(() => { map.invalidateSize(); }, 200);
+                    setTimeout(() => { map.invalidateSize(); }, 100);
                 }
             }
         }
 
-        function initMap() {
-            if (map) return;
+        function initMapSystem() {
             map = L.map('map').setView([baseLat, baseLng], 12);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-            renderFleetOnMap();
-            renderSidebar();
-            setInterval(simulateMovement, 3000);
+            fleet.forEach(bus => {
+                let marker = L.circleMarker([bus.lat, bus.lng], {
+                    radius: 8,
+                    fillColor: getColor(bus.status),
+                    color: '#ffffff',
+                    weight: 2,
+                    fillOpacity: 0.9
+                }).addTo(map);
 
+                marker.bindPopup(`<b>${bus.id ? 'Bus #' + bus.id : 'Slot #' + bus.slot}</b><br>Status: ${bus.status}`);
+                busMarkers[bus.slot] = marker;
+            });
+
+            renderSidebarList();
             setTimeout(() => { map.invalidateSize(); }, 200);
         }
 
-        function getDotIcon(status) {
-            return L.divIcon({
-                className: 'svg-marker-icon',
-                html: `<div class="dot-circle dot-${status.toLowerCase()}"></div>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-            });
+        function getColor(status) {
+            if (status === 'YELLOW') return '#eab308';
+            if (status === 'ORANGE') return '#f97316';
+            if (status === 'RED') return '#ef4444';
+            return '#22c55e';
         }
 
-        function renderFleetOnMap() {
-            if (!map) return;
-            fleetData.forEach(bus => {
-                const marker = L.marker([bus.lat, bus.lng], { icon: getDotIcon(bus.status) }).addTo(map);
-                marker.bindPopup(getPopupContent(bus));
-                busMarkers[bus.slotIndex] = marker;
-            });
+        function renderDropdowns() {
+            const selSlot = document.getElementById('select-slot');
+            const selTalk = document.getElementById('select-talk-slot');
+
+            let html = fleet.map(b => `<option value="${b.slot - 1}">${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</option>`).join('');
+            selSlot.innerHTML = html;
+            selTalk.innerHTML = html;
         }
 
-        function getPopupContent(bus) {
+        function loadSlotData() {
+            let idx = document.getElementById('select-slot').value;
+            document.getElementById('input-bus-num').value = fleet[idx].id;
+        }
+
+        function saveSlotData() {
+            let idx = document.getElementById('select-slot').value;
+            let val = document.getElementById('input-bus-num').value.trim();
+            fleet[idx].id = val;
+
+            if (idx == 0) {
+                document.getElementById('driver-bus-title').innerText = val ? `Bus #${val}` : `Slot #1 (Unassigned)`;
+            }
+
+            renderDropdowns();
+            document.getElementById('select-slot').value = idx;
+            updateMapDisplay();
+        }
+
+        function updateMapDisplay() {
+            fleet.forEach(bus => {
+                if (busMarkers[bus.slot]) {
+                    busMarkers[bus.slot].setStyle({ fillColor: getColor(bus.status) });
+                    busMarkers[bus.slot].setPopupContent(`<b>${bus.id ? 'Bus #' + bus.id : 'Slot #' + bus.slot}</b><br>Status: ${bus.status}`);
+                }
+            });
+            renderSidebarList();
+        }
+
+        function setDriverStatus(status) {
+            fleet[0].status = status;
+            updateMapDisplay();
+        }
+
+        function holdOrange() {
+            setDriverStatus('ORANGE');
+            document.getElementById('driver-reply').innerText = "🎙️ DRIVER TRANSMITTING...";
+        }
+
+        function releaseOrange() {
+            document.getElementById('driver-reply').innerText = "Office Reply: Transmitted to Dispatch";
+            setTimeout(() => { setDriverStatus('GREEN'); document.getElementById('driver-reply').innerText = "Channel Ready"; }, 3000);
+        }
+
+        function transmitToDriver() {
+            let idx = document.getElementById('select-talk-slot').value;
+            let msg = document.getElementById('input-msg').value;
+
+            fleet[idx].status = 'ORANGE';
+            updateMapDisplay();
+
+            if (idx == 0) {
+                document.getElementById('driver-reply').innerText = `📢 OFFICE: "${msg}"`;
+            }
+
+            setTimeout(() => {
+                fleet[idx].status = 'GREEN';
+                updateMapDisplay();
+            }, 4000);
+        }
+
+        function renderSidebarList() {
+            const list = document.getElementById('bus-list');
+            if (!list) return;
+
+            list.innerHTML = fleet.map(b => `
+                <div class="bus-item" onclick="focusOnBus(${b.slot})">
+                    <span>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</span>
+                    <span class="badge badge-${b.status}">${b.status}</span>
+                </div>
+            `).join('');
+        }
+
+        function focusOnBus(slot) {
+            let bus = fleet.find(b => b.slot == slot);
+            if (bus && map) {
+                map.setView([bus.lat, bus.lng], 14);
+                busMarkers[slot].openPopup();
+            }
+        }
+
+        window.onload = () => {
+            renderDropdowns();
+        };
+    </script>
+</body>
+</html>
