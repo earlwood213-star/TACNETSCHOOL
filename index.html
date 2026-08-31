@@ -265,7 +265,7 @@
 <body>
 
     <div class="view-switcher">
-        <div class="school-branding-tag" id="header-district-name">AMHERST COUNTY PUBLIC SCHOOLS</div>
+        <div class="school-branding-tag" id="header-district-name">SCHOOL DISTRICT NAME</div>
         <div class="nav-btn-group">
             <button id="tab-setup" class="nav-btn nav-btn-setup active" onclick="showView('setup')">⚙️ LOCATION SETUP</button>
             <button id="tab-driver" class="nav-btn" onclick="showView('driver')">🏠 DRIVER UI</button>
@@ -283,25 +283,25 @@
                 <div class="form-grid">
                     <div class="form-group full-width">
                         <label>School District Name</label>
-                        <input type="text" id="cfg-district" value="Amherst County Public Schools">
+                        <input type="text" id="cfg-district" placeholder="e.g. County Public Schools">
                     </div>
                     <div class="form-group full-width">
                         <label>School Campus Name</label>
-                        <input type="text" id="cfg-school" value="Amherst County High School">
+                        <input type="text" id="cfg-school" placeholder="e.g. Central High School">
                     </div>
                     
                     <div class="form-group full-width">
                         <label>Full Campus Street Address</label>
-                        <input type="text" id="cfg-address" value="139 Lancer Lane">
+                        <input type="text" id="cfg-address" placeholder="e.g. 100 Education Way">
                     </div>
 
                     <div class="form-group">
                         <label>City / Town</label>
-                        <input type="text" id="cfg-city" value="Amherst">
+                        <input type="text" id="cfg-city" placeholder="City">
                     </div>
                     <div class="form-group">
                         <label>State & Zip Code</label>
-                        <input type="text" id="cfg-state-zip" value="VA 24521">
+                        <input type="text" id="cfg-state-zip" placeholder="ST 00000">
                     </div>
                 </div>
 
@@ -321,8 +321,8 @@
             <div class="glass-card">
                 <div class="driver-header">
                     <div class="main-title">TACNET SCHOOL</div>
-                    <div class="school-title-sub" id="driver-school-display">Amherst County High School</div>
-                    <div class="school-address-sub" id="driver-address-display">139 Lancer Lane, Amherst, VA 24521</div>
+                    <div class="school-title-sub" id="driver-school-display">Configure School Name</div>
+                    <div class="school-address-sub" id="driver-address-display">Configure Address in Setup</div>
                 </div>
             </div>
 
@@ -330,7 +330,7 @@
                 <label style="color: #00f0ff; font-weight: bold;">SELECT YOUR BUS UNIT:</label>
                 <select id="select-active-driver-slot" class="select-driver-slot" onchange="syncDriverView()"></select>
                 <div style="font-size: 26px; font-weight: 900; color: #00f0ff;" id="driver-bus-title">Bus #101</div>
-                <div style="font-size: 18px; color: #fff;" id="driver-name-sub">Driver: John Doe</div>
+                <div style="font-size: 18px; color: #fff;" id="driver-name-sub">Driver: Unassigned</div>
 
                 <div class="grid-buttons">
                     <button class="btn-status btn-green" onclick="setDriverStatus('GREEN')">GREEN (NORMAL)</button>
@@ -371,8 +371,9 @@
     </div>
 
     <script>
-        let centerLat = 37.5755;
-        let centerLng = -79.0531;
+        // Default starting coordinates set to central US (Kansas) until user sets their location
+        let centerLat = 39.8283;
+        let centerLng = -98.5795;
 
         let setupMap, monitorMap;
         let setupMarker, monitorAddressMarker;
@@ -380,11 +381,11 @@
         let busMapMarkers = [];
 
         let CONFIG = {
-            district: "Amherst County Public Schools",
-            school: "Amherst County High School",
-            address: "139 Lancer Lane",
-            city: "Amherst",
-            state_zip: "VA 24521"
+            district: "School District Name",
+            school: "School Campus Name",
+            address: "",
+            city: "",
+            state_zip: ""
         };
 
         let fleet = [];
@@ -396,8 +397,8 @@
                 let offsetLng = (Math.random() - 0.5) * 0.012;
                 fleet.push({
                     slot: i,
-                    id: i === 1 ? '101' : (i === 2 ? '104' : ''),
-                    driver: i === 1 ? 'John Doe' : (i === 2 ? 'Jane Smith' : ''),
+                    id: i === 1 ? '101' : '',
+                    driver: '',
                     status: 'GREEN',
                     lat: centerLat + offsetLat,
                     lng: centerLng + offsetLng
@@ -407,7 +408,7 @@
 
         function initMaps() {
             // Setup Map
-            setupMap = L.map('setupMap').setView([centerLat, centerLng], 16);
+            setupMap = L.map('setupMap').setView([centerLat, centerLng], 4);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap'
@@ -429,7 +430,7 @@
             });
 
             // Command Monitor Map
-            monitorMap = L.map('monitorMap').setView([centerLat, centerLng], 16);
+            monitorMap = L.map('monitorMap').setView([centerLat, centerLng], 4);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap'
@@ -470,33 +471,44 @@
                 monitorMap.removeLayer(monitorAddressMarker);
             }
 
+            let schoolLabel = CONFIG.school || "Campus Location";
             let addressIcon = L.divIcon({
                 className: 'custom-address-icon',
-                html: `<div style="display: flex; align-items: center; gap: 6px;"><div class="address-pin-dot"></div><span style="background: #020926; color: #fbbf24; padding: 2px 8px; border: 2px solid #fbbf24; border-radius: 4px; font-size: 12px; font-weight: 900; box-shadow: 0 0 10px rgba(0,0,0,0.8);">📍 ${CONFIG.school}</span></div>`,
+                html: `<div style="display: flex; align-items: center; gap: 6px;"><div class="address-pin-dot"></div><span style="background: #020926; color: #fbbf24; padding: 2px 8px; border: 2px solid #fbbf24; border-radius: 4px; font-size: 12px; font-weight: 900; box-shadow: 0 0 10px rgba(0,0,0,0.8);">📍 ${schoolLabel}</span></div>`,
                 iconSize: [220, 30],
                 iconAnchor: [10, 15]
             });
 
             monitorAddressMarker = L.marker([centerLat, centerLng], { icon: addressIcon }).addTo(monitorMap);
-            let fullAddr = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ');
+            let fullAddr = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ') || 'No address provided';
             monitorAddressMarker.bindPopup(`
                 <div style="color:#020926; font-family:sans-serif;">
                     <b style="font-size:15px; color:#d97706;">🎯 Campus Address Target</b><br>
-                    <b>School:</b> ${CONFIG.school}<br>
+                    <b>School:</b> ${schoolLabel}<br>
                     <small>📍 ${fullAddr}</small>
                 </div>
             `);
         }
 
         function geocodeAndSave() {
-            CONFIG.district = document.getElementById('cfg-district').value;
-            CONFIG.school = document.getElementById('cfg-school').value;
-            CONFIG.address = document.getElementById('cfg-address').value;
-            CONFIG.city = document.getElementById('cfg-city').value;
-            CONFIG.state_zip = document.getElementById('cfg-state-zip').value;
+            CONFIG.district = document.getElementById('cfg-district').value.trim() || "School District";
+            CONFIG.school = document.getElementById('cfg-school').value.trim() || "School Campus";
+            CONFIG.address = document.getElementById('cfg-address').value.trim();
+            CONFIG.city = document.getElementById('cfg-city').value.trim();
+            CONFIG.state_zip = document.getElementById('cfg-state-zip').value.trim();
 
-            let fullQuery = `${CONFIG.address}, ${CONFIG.city}, ${CONFIG.state_zip}`;
+            let fullQuery = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ');
             
+            if (!fullQuery) {
+                // If no address fields entered, just use current marker position
+                updateCampusPerimeter();
+                renderAddressPin();
+                renderBusMarkers();
+                updateApp();
+                showView('command');
+                return;
+            }
+
             fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullQuery)}`)
                 .then(res => res.json())
                 .then(data => {
@@ -519,7 +531,12 @@
                         updateApp();
                         showView('command');
                     } else {
-                        alert("Address search failed. Please click directly on the map to set the campus position.");
+                        alert("Address lookup not found. Coordinates updated to current pin position.");
+                        updateCampusPerimeter();
+                        renderAddressPin();
+                        renderBusMarkers();
+                        updateApp();
+                        showView('command');
                     }
                 })
                 .catch(() => {
@@ -545,7 +562,7 @@
                 });
 
                 let marker = L.marker([b.lat, b.lng], { icon: customIcon }).addTo(monitorMap);
-                let fullAddr = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ');
+                let fullAddr = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ') || 'Custom Coordinates';
                 
                 marker.bindPopup(`
                     <div style="color:#020926; font-family:sans-serif;">
@@ -570,7 +587,7 @@
         function updateApp() {
             document.getElementById('header-district-name').innerText = CONFIG.district.toUpperCase();
             document.getElementById('driver-school-display').innerText = `${CONFIG.school} - ${CONFIG.district}`;
-            document.getElementById('driver-address-display').innerText = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ');
+            document.getElementById('driver-address-display').innerText = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ') || 'Ready for custom school entry';
 
             renderDropdowns();
             renderSidebar();
