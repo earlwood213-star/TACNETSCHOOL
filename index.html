@@ -452,8 +452,8 @@
             </div>
         </div>
         <div>
-            <button class="toggle-btn active" onclick="switchView('driver')">Bus Driver View</button>
-            <button class="toggle-btn" onclick="switchView('command')">School Main Monitor</button>
+            <button id="btn-view-driver" class="toggle-btn active" onclick="switchView('driver')">Bus Driver View</button>
+            <button id="btn-view-command" class="toggle-btn" onclick="switchView('command')">School Main Monitor</button>
         </div>
     </header>
 
@@ -562,7 +562,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        let map;
+        let map = null;
         let busMarkers = {};
         let fleetData = [];
 
@@ -570,12 +570,12 @@
         const baseLat = 37.5815;
         const baseLng = -79.0506;
 
-        // Initialize all 20 bus slots locked within Amherst County, VA
+        // Initialize 20 slots locked within Amherst County, VA
         for (let i = 1; i <= 20; i++) {
             fleetData.push({
                 slotIndex: i,
-                id: '', // Blank
-                driver: '', // Blank
+                id: '', 
+                driver: '', 
                 status: 'GREEN',
                 lat: baseLat + (Math.random() - 0.5) * 0.08,
                 lng: baseLng + (Math.random() - 0.5) * 0.08
@@ -591,17 +591,21 @@
                 return `<option value="${idx}">${labelText}</option>`;
             }).join('');
 
-            select.innerHTML = optionsHTML;
-            talkSelect.innerHTML = optionsHTML;
+            if (select) select.innerHTML = optionsHTML;
+            if (talkSelect) talkSelect.innerHTML = optionsHTML;
 
             loadBusConfigValues();
         }
 
         function loadBusConfigValues() {
-            const idx = document.getElementById('select-bus-slot').value;
+            const select = document.getElementById('select-bus-slot');
+            if (!select) return;
+            const idx = select.value;
             const bus = fleetData[idx];
-            document.getElementById('input-bus-id').value = bus.id;
-            document.getElementById('input-bus-driver').value = bus.driver;
+            if (bus) {
+                document.getElementById('input-bus-id').value = bus.id;
+                document.getElementById('input-bus-driver').value = bus.driver;
+            }
         }
 
         function saveCustomBusNumber() {
@@ -625,136 +629,3 @@
             populateBusSelectDropdown();
             document.getElementById('select-bus-slot').value = nextIdx;
             loadBusConfigValues();
-            updateFleetMap();
-
-            document.getElementById('input-bus-id').focus();
-            document.getElementById('input-bus-id').select();
-        }
-
-        function clearSelectedSlot() {
-            const idx = parseInt(document.getElementById('select-bus-slot').value);
-            fleetData[idx].id = '';
-            fleetData[idx].driver = '';
-
-            if (idx === 0) {
-                document.getElementById('driver-bus-title').innerText = `Slot #1 (Unassigned)`;
-                document.getElementById('driver-name-text').innerText = 'Unassigned';
-            }
-
-            document.getElementById('input-bus-id').value = '';
-            document.getElementById('input-bus-driver').value = '';
-
-            populateBusSelectDropdown();
-            document.getElementById('select-bus-slot').value = idx;
-            updateFleetMap();
-
-            document.getElementById('input-bus-id').focus();
-        }
-
-        function switchView(view) {
-            const driverView = document.getElementById('driver-view');
-            const commandView = document.getElementById('command-view');
-            const btns = document.querySelectorAll('.toggle-btn');
-
-            if (view === 'driver') {
-                driverView.classList.remove('hidden');
-                commandView.classList.add('hidden');
-                btns[0].classList.add('active');
-                btns[1].classList.remove('active');
-            } else {
-                driverView.classList.add('hidden');
-                commandView.classList.remove('hidden');
-                btns[1].classList.add('active');
-                btns[0].classList.remove('active');
-                
-                if (!map) {
-                    setTimeout(initMap, 100);
-                }
-            }
-        }
-
-        function initMap() {
-            map = L.map('map').setView([baseLat, baseLng], 12);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-
-            renderFleetOnMap();
-            renderSidebar();
-            setInterval(simulateMovement, 3000);
-        }
-
-        function getDotIcon(status) {
-            return L.divIcon({
-                className: 'svg-marker-icon',
-                html: `<div class="dot-circle dot-${status.toLowerCase()}"></div>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-            });
-        }
-
-        function renderFleetOnMap() {
-            fleetData.forEach(bus => {
-                const marker = L.marker([bus.lat, bus.lng], { icon: getDotIcon(bus.status) }).addTo(map);
-                marker.bindPopup(getPopupContent(bus));
-                busMarkers[bus.slotIndex] = marker;
-            });
-        }
-
-        function getPopupContent(bus) {
-            let colorHex = "#22c55e";
-            if (bus.status === "YELLOW") colorHex = "#eab308";
-            if (bus.status === "ORANGE") colorHex = "#f97316";
-            if (bus.status === "RED") colorHex = "#ef4444";
-
-            const displayName = bus.id ? `Bus #${bus.id}` : `Slot #${bus.slotIndex} (Unassigned)`;
-            const driverText = bus.driver ? `Driver: ${bus.driver}` : `No driver assigned`;
-
-            return `
-                <div style="text-align:center;">
-                    <b style="font-size:1.1rem;">${displayName}</b><br>
-                    <span>${driverText}</span><br>
-                    <span style="display:inline-block; margin-top:5px; padding:3px 8px; border-radius:4px; background:${colorHex}; color:${bus.status === 'YELLOW' ? '#000' : '#fff'}; font-weight:bold;">
-                        ${bus.status}
-                    </span>
-                </div>
-            `;
-        }
-
-        function updateFleetMap() {
-            fleetData.forEach(bus => {
-                if (busMarkers[bus.slotIndex]) {
-                    busMarkers[bus.slotIndex].setLatLng([bus.lat, bus.lng]);
-                    busMarkers[bus.slotIndex].setIcon(getDotIcon(bus.status));
-                    busMarkers[bus.slotIndex].setPopupContent(getPopupContent(bus));
-                }
-            });
-            renderSidebar();
-        }
-
-        function simulateMovement() {
-            fleetData.forEach((bus) => {
-                bus.lat += (Math.random() - 0.5) * 0.001;
-                bus.lng += (Math.random() - 0.5) * 0.001;
-            });
-            updateFleetMap();
-        }
-
-        function setButtonActiveState(status) {
-            ['GREEN', 'YELLOW', 'ORANGE', 'RED'].forEach(s => {
-                const btn = document.getElementById(`btn-${s}`);
-                if (btn) btn.classList.remove('active-green', 'active-yellow', 'active-orange', 'active-red');
-            });
-
-            const activeBtn = document.getElementById(`btn-${status}`);
-            if (activeBtn) activeBtn.classList.add(`active-${status.toLowerCase()}`);
-        }
-
-        function updateDriverStatus(status) {
-            const activeBus = fleetData[0];
-            if (activeBus) {
-                activeBus.status = status;
-                if (status !== 'RED') {
-                    document.getElementById('alert-banner').style.display = '
