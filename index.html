@@ -4,28 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TACNET SCHOOL - Command & Driver Platform</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         
-        body { 
-            background: radial-gradient(circle at center, #071c52 0%, #020926 100%); 
+        html, body { 
+            width: 100%;
+            height: 100%;
+            background: #020926; 
             color: #ffffff; 
-            height: 100vh; 
             display: flex; 
             flex-direction: column; 
             overflow: hidden; 
         }
 
         .view-switcher {
+            height: 60px;
             background: rgba(1, 10, 42, 0.95);
             border-bottom: 2px solid #00f0ff;
-            padding: 10px 20px;
+            padding: 0 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 2000;
-            position: relative;
+            flex-shrink: 0;
         }
 
         .school-branding-tag {
@@ -61,13 +63,10 @@
             padding: 20px;
             gap: 20px;
             overflow-y: auto;
-            position: relative;
-            z-index: 10;
         }
 
         .setup-card {
-            flex: 1;
-            max-width: 520px;
+            width: 480px;
             background: rgba(0, 20, 60, 0.95);
             border: 2px solid #fbbf24;
             border-radius: 18px;
@@ -76,11 +75,13 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            z-index: 20;
+            flex-shrink: 0;
         }
 
         .setup-map-card {
-            flex: 1.2;
+            flex: 1;
+            height: 100%;
+            min-height: 400px;
             background: rgba(0, 120, 255, 0.1);
             border: 2px solid #00f0ff;
             border-radius: 18px;
@@ -93,14 +94,14 @@
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 10px;
         }
 
         .form-group { display: flex; flex-direction: column; gap: 4px; }
         .form-group.full-width { grid-column: span 2; }
 
         .form-group label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
             color: #00f0ff;
             text-transform: uppercase;
@@ -112,12 +113,8 @@
             border: 2px solid #00f0ff !important;
             padding: 10px;
             border-radius: 6px;
-            font-size: 15px;
+            font-size: 14px;
             outline: none;
-            pointer-events: auto !important;
-            user-select: text !important;
-            position: relative;
-            z-index: 30;
         }
 
         input[type="text"]:focus {
@@ -129,7 +126,7 @@
             background: #00f0ff;
             color: #020926;
             border: none;
-            padding: 10px 16px;
+            padding: 10px 14px;
             border-radius: 6px;
             font-weight: 900;
             cursor: pointer;
@@ -140,13 +137,13 @@
             background: #fbbf24;
             color: #020926;
             border: none;
-            padding: 15px;
+            padding: 14px;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
             cursor: pointer;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 8px;
             text-transform: uppercase;
             box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
         }
@@ -154,10 +151,10 @@
         #setup-picker-map {
             width: 100%;
             height: 100%;
-            min-height: 350px;
+            min-height: 380px;
             border-radius: 12px;
             border: 1px solid #00f0ff;
-            z-index: 5;
+            background: #111;
         }
 
         /* DRIVER VIEW */
@@ -193,7 +190,7 @@
         .select-driver-slot { background: #000; color: #00f0ff; border: 2px solid #00f0ff; padding: 10px; border-radius: 8px; font-size: 16px; font-weight: bold; width: 100%; margin-bottom: 10px; }
 
         /* COMMAND MONITOR VIEW */
-        .sidebar { width: 400px; background: rgba(2, 9, 38, 0.95); border-right: 2px solid #00f0ff; display: flex; flex-direction: column; padding: 15px; gap: 12px; }
+        .sidebar { width: 380px; background: rgba(2, 9, 38, 0.95); border-right: 2px solid #00f0ff; display: flex; flex-direction: column; padding: 15px; gap: 12px; flex-shrink: 0; }
         .panel-glass { background: rgba(0, 120, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 12px; padding: 12px; }
         .input-row { display: flex; gap: 8px; margin-top: 8px; }
         .input-row select { background: #000; color: #fff; border: 1px solid #00f0ff; padding: 8px; border-radius: 6px; flex: 1; }
@@ -206,8 +203,8 @@
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 800; }
         .badge-GREEN { background: #22c55e; color: #fff; }
 
-        .map-box { flex: 1; height: 100%; width: 100%; background: #000; position: relative; }
-        #map { width: 100%; height: 100%; min-height: 400px; }
+        .map-box { flex: 1; height: 100%; width: 100%; background: #050b1e; position: relative; }
+        #map { width: 100%; height: 100%; min-height: 100%; background: #111; }
     </style>
 </head>
 <body>
@@ -225,7 +222,7 @@
 
         <div id="setup-view" class="view-panel">
             <div class="setup-card">
-                <h2 style="color: #fbbf24; font-size: 20px; border-bottom: 2px solid #fbbf24; padding-bottom: 8px;">⚙️ LOCATION & CAMPUS SETUP</h2>
+                <h2 style="color: #fbbf24; font-size: 18px; border-bottom: 2px solid #fbbf24; padding-bottom: 6px;">⚙️ SYSTEM & LOCATION SETUP</h2>
                 
                 <div class="form-grid">
                     <div class="form-group full-width">
@@ -240,249 +237,5 @@
                     <div class="form-group full-width">
                         <label>Full Address Search (Nationwide)</label>
                         <div style="display: flex; gap: 8px;">
-                            <input type="text" id="cfg-address" placeholder="Type Street Address, City, State or Zip" autocomplete="off" style="flex: 1;">
-                            <button type="button" class="btn-search" onclick="lookupAddress()">🔍 Find</button>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>City / Town</label>
-                        <input type="text" id="cfg-city" placeholder="City or Town" autocomplete="off">
-                    </div>
-                    <div class="form-group">
-                        <label>State & Zip Code</label>
-                        <input type="text" id="cfg-state-zip" placeholder="State & Zip Code" autocomplete="off">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Latitude</label>
-                        <input type="text" id="cfg-lat" placeholder="Click map or enter lat" autocomplete="off">
-                    </div>
-                    <div class="form-group">
-                        <label>Longitude</label>
-                        <input type="text" id="cfg-lng" placeholder="Click map or enter lng" autocomplete="off">
-                    </div>
-                </div>
-
-                <button type="button" class="btn-save-setup" id="btn-save" onclick="applySetup()">💾 SAVE LOCATION & LOAD MONITOR MAP</button>
-            </div>
-
-            <div class="setup-map-card">
-                <div style="font-size: 14px; font-weight: bold; color: #00f0ff;">📍 CLICK ANYWHERE ON US MAP TO PIN LOCATION:</div>
-                <div id="setup-picker-map"></div>
-            </div>
-        </div>
-        
-        <div id="driver-view" class="view-panel hidden">
-            <div class="glass-card">
-                <div class="driver-header">
-                    <div class="main-title">TACNET SCHOOL</div>
-                    <div class="school-title-sub" id="driver-school-display">UNCONFIGURED</div>
-                    <div class="school-address-sub" id="driver-address-display">Location Unconfigured</div>
-                </div>
-            </div>
-
-            <div class="glass-card">
-                <label style="color: #00f0ff; font-weight: bold;">ACTIVE DRIVER UNIT:</label>
-                <select id="select-active-driver-slot" class="select-driver-slot" onchange="syncDriverView()"></select>
-                <div style="font-size: 26px; font-weight: 900; color: #00f0ff;" id="driver-bus-title">Slot #1</div>
-                <div style="font-size: 18px; color: #fff;" id="driver-name-sub">Driver: Unassigned</div>
-
-                <div class="grid-buttons">
-                    <button class="btn-large btn-green">GREEN</button>
-                    <button class="btn-large btn-yellow">YELLOW</button>
-                    <button class="btn-large btn-orange">ORANGE</button>
-                    <button class="btn-large btn-red">🚨 RED EMERGENCY</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="command-view" class="view-panel hidden">
-            <div class="sidebar">
-                <div class="panel-glass">
-                    <p style="color: #00f0ff; font-weight: bold;">✏️ ASSIGN BUS & DRIVER</p>
-                    <div class="input-row">
-                        <select id="select-slot" onchange="populateInputs()"></select>
-                    </div>
-                    <div class="input-row">
-                        <input type="text" id="input-bus-num" placeholder="Bus #" autocomplete="off">
-                        <input type="text" id="input-driver-name" placeholder="Driver Name" autocomplete="off">
-                    </div>
-                    <div class="btn-group-row">
-                        <button class="action-btn" onclick="saveSlot()">💾 Save Unit</button>
-                        <button class="erase-btn" onclick="clearSlot()">🗑️ Clear</button>
-                    </div>
-                </div>
-
-                <div style="font-size: 16px; font-weight: bold; color: #00f0ff;">Active Fleet Units</div>
-                <div class="bus-list" id="bus-list"></div>
-            </div>
-
-            <div class="map-box">
-                <div id="map"></div>
-            </div>
-        </div>
-
-    </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        let SCHOOL_CONFIG = {
-            district: "",
-            school: "",
-            address: "",
-            city: "",
-            state_zip: "",
-            lat: 39.8283, // Center US baseline
-            lng: -98.5795
-        };
-
-        let map = null;
-        let pickerMap = null;
-        let pickerMarker = null;
-        let busMarkers = {};
-        let fleet = [];
-
-        function initPickerMap() {
-            if (!pickerMap) {
-                pickerMap = L.map('setup-picker-map').setView([SCHOOL_CONFIG.lat, SCHOOL_CONFIG.lng], 4);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(pickerMap);
-
-                pickerMap.on('click', function(e) {
-                    setPickerCoords(e.latlng.lat, e.latlng.lng);
-                });
-            }
-        }
-
-        function setPickerCoords(lat, lng) {
-            lat = parseFloat(lat).toFixed(6);
-            lng = parseFloat(lng).toFixed(6);
-            document.getElementById('cfg-lat').value = lat;
-            document.getElementById('cfg-lng').value = lng;
-            SCHOOL_CONFIG.lat = parseFloat(lat);
-            SCHOOL_CONFIG.lng = parseFloat(lng);
-
-            if (pickerMarker) {
-                pickerMarker.setLatLng([lat, lng]);
-            } else {
-                pickerMarker = L.marker([lat, lng], { draggable: true }).addTo(pickerMap);
-                pickerMarker.on('dragend', function(e) {
-                    let pos = pickerMarker.getLatLng();
-                    setPickerCoords(pos.lat, pos.lng);
-                });
-            }
-            pickerMap.panTo([lat, lng]);
-        }
-
-        function lookupAddress() {
-            let addr = document.getElementById('cfg-address').value.trim();
-            let city = document.getElementById('cfg-city').value.trim();
-            let stateZip = document.getElementById('cfg-state-zip').value.trim();
-
-            let query = [addr, city, stateZip].filter(Boolean).join(', ');
-
-            if (!query) {
-                alert("Please enter a street address, city, or zip code in the search box.");
-                return;
-            }
-
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data && data.length > 0) {
-                        setPickerCoords(data[0].lat, data[0].lon);
-                        pickerMap.setZoom(13);
-                    } else {
-                        alert("Location not found automatically. Click your location directly on the map to set pin.");
-                    }
-                })
-                .catch(() => {
-                    alert("Network lookup blocked or unavailable. Click your target location directly on the map to set pin.");
-                });
-        }
-
-        function applySetup() {
-            SCHOOL_CONFIG.district = document.getElementById('cfg-district').value.trim() || "District Unspecified";
-            SCHOOL_CONFIG.school = document.getElementById('cfg-school').value.trim() || "School Campus";
-            SCHOOL_CONFIG.address = document.getElementById('cfg-address').value.trim() || "";
-            SCHOOL_CONFIG.city = document.getElementById('cfg-city').value.trim() || "";
-            SCHOOL_CONFIG.state_zip = document.getElementById('cfg-state-zip').value.trim() || "";
-
-            let manualLat = parseFloat(document.getElementById('cfg-lat').value);
-            let manualLng = parseFloat(document.getElementById('cfg-lng').value);
-
-            if (!isNaN(manualLat) && !isNaN(manualLng)) {
-                SCHOOL_CONFIG.lat = manualLat;
-                SCHOOL_CONFIG.lng = manualLng;
-            }
-
-            updateApp();
-            showView('command');
-        }
-
-        function getFormattedAddress() {
-            return [SCHOOL_CONFIG.address, SCHOOL_CONFIG.city, SCHOOL_CONFIG.state_zip].filter(Boolean).join(', ') || "Location Unconfigured";
-        }
-
-        function updateApp() {
-            document.getElementById('header-district-name').innerText = (SCHOOL_CONFIG.district || "TACNET SCHOOL SYSTEM").toUpperCase();
-            document.getElementById('driver-school-display').innerText = SCHOOL_CONFIG.school ? `${SCHOOL_CONFIG.school} - ${SCHOOL_CONFIG.district}` : "UNCONFIGURED";
-            document.getElementById('driver-address-display').innerText = getFormattedAddress();
-
-            fleet = [];
-            for (let i = 1; i <= 20; i++) {
-                fleet.push({
-                    slot: i,
-                    id: '',
-                    driver: '',
-                    status: 'GREEN',
-                    lat: SCHOOL_CONFIG.lat + (Math.random() - 0.5) * 0.012,
-                    lng: SCHOOL_CONFIG.lng + (Math.random() - 0.5) * 0.012
-                });
-            }
-
-            renderDropdowns();
-            renderSidebar();
-            populateInputs();
-            syncDriverView();
-
-            if (map) {
-                map.setView([SCHOOL_CONFIG.lat, SCHOOL_CONFIG.lng], 13);
-                fleet.forEach(b => drawMarker(b));
-            }
-        }
-
-        function renderDropdowns() {
-            let options = fleet.map((b, i) => `<option value="${i}">${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot} ${b.driver ? '(' + b.driver + ')' : ''}</option>`).join('');
-            document.getElementById('select-slot').innerHTML = options;
-            document.getElementById('select-active-driver-slot').innerHTML = options;
-        }
-
-        function populateInputs() {
-            let i = parseInt(document.getElementById('select-slot').value) || 0;
-            document.getElementById('input-bus-num').value = fleet[i].id;
-            document.getElementById('input-driver-name').value = fleet[i].driver;
-        }
-
-        function saveSlot() {
-            let i = parseInt(document.getElementById('select-slot').value);
-            fleet[i].id = document.getElementById('input-bus-num').value.trim();
-            fleet[i].driver = document.getElementById('input-driver-name').value.trim();
-
-            renderDropdowns();
-            document.getElementById('select-slot').value = i;
-            renderSidebar();
-            syncDriverView();
-            if (map) drawMarker(fleet[i]);
-        }
-
-        function clearSlot() {
-            let i = parseInt(document.getElementById('select-slot').value);
-            fleet[i].id = '';
-            fleet[i].driver = '';
-            document.getElementById('input-bus-num').value = '';
-            document.getElementById('input-driver-name').value = '';
-
-            renderDropdowns();
-            document.getElementById('select-slot').value = i;
-            renderSidebar();
+                            <input type="text" id="cfg-address" placeholder="Type Street, City, State or Zip" autocomplete="off" style="flex: 1;">
+                            <button type="button" class="btn-search" onclick="lookupAddress()">
