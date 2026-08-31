@@ -89,7 +89,7 @@
             text-transform: uppercase;
         }
 
-        input[type="text"], select.setup-select {
+        input[type="text"] {
             background: #000000 !important;
             color: #ffffff !important;
             border: 2px solid #00f0ff !important;
@@ -101,7 +101,7 @@
             user-select: text !important;
         }
 
-        input[type="text"]:focus, select.setup-select:focus {
+        input[type="text"]:focus {
             border-color: #fbbf24 !important;
             box-shadow: 0 0 10px #fbbf24;
         }
@@ -193,39 +193,31 @@
                     <div class="form-grid">
                         <div class="form-group full-width">
                             <label>School District Name</label>
-                            <input type="text" id="cfg-district" placeholder="Enter District Name (e.g. Fairfax County Public Schools)" autocomplete="off">
+                            <input type="text" id="cfg-district" placeholder="Enter District Name" autocomplete="off">
                         </div>
                         <div class="form-group full-width">
                             <label>School Campus Name</label>
-                            <input type="text" id="cfg-school" placeholder="Enter Campus Name (e.g. Oakton High School)" autocomplete="off">
+                            <input type="text" id="cfg-school" placeholder="Enter Campus Name" autocomplete="off">
                         </div>
                         <div class="form-group full-width">
                             <label>Street Address</label>
                             <input type="text" id="cfg-address" placeholder="Enter Street Address" autocomplete="off">
                         </div>
                         <div class="form-group">
-                            <label>City / Region Preset</label>
-                            <select id="cfg-preset" class="setup-select" onchange="applyPresetCoordinates()">
-                                <option value="38.8821,-77.2754">Fairfax / Vienna, VA</option>
-                                <option value="38.8462,-77.3064">City of Fairfax, VA</option>
-                                <option value="39.1157,-77.5636">Loudoun / Leesburg, VA</option>
-                                <option value="38.7509,-77.4753">Prince William / Manassas, VA</option>
-                                <option value="37.5407,-77.4360">Richmond, VA</option>
-                                <option value="37.2707,-79.9414">Roanoke, VA</option>
-                                <option value="37.5857,-79.0514">Amherst, VA</option>
-                            </select>
+                            <label>City / Town</label>
+                            <input type="text" id="cfg-city" placeholder="Type Any City or Town Name" autocomplete="off">
                         </div>
                         <div class="form-group">
-                            <label>State & Zip</label>
-                            <input type="text" id="cfg-state-zip" placeholder="State & Zip (e.g. VA 22181)" autocomplete="off">
+                            <label>State & Zip Code</label>
+                            <input type="text" id="cfg-state-zip" placeholder="e.g. VA 24521" autocomplete="off">
                         </div>
                         <div class="form-group">
-                            <label>Manual Latitude (Override)</label>
-                            <input type="text" id="cfg-lat" placeholder="38.8821" autocomplete="off">
+                            <label>Manual Latitude (Optional Override)</label>
+                            <input type="text" id="cfg-lat" placeholder="e.g. 37.3500" autocomplete="off">
                         </div>
                         <div class="form-group">
-                            <label>Manual Longitude (Override)</label>
-                            <input type="text" id="cfg-lng" placeholder="-77.2754" autocomplete="off">
+                            <label>Manual Longitude (Optional Override)</label>
+                            <input type="text" id="cfg-lng" placeholder="e.g. -79.1500" autocomplete="off">
                         </div>
                     </div>
 
@@ -296,24 +288,28 @@
             address: "",
             city: "",
             state_zip: "",
-            lat: 38.8821,
-            lng: -77.2754
+            lat: 38.0000,
+            lng: -78.5000
         };
 
         let map = null;
         let busMarkers = {};
         let fleet = [];
 
-        function applyPresetCoordinates() {
-            let val = document.getElementById('cfg-preset').value.split(',');
-            document.getElementById('cfg-lat').value = val[0];
-            document.getElementById('cfg-lng').value = val[1];
+        // Generates deterministic coordinates from text inputs when running locally without internet lookup
+        function textToCoordinateOffset(text) {
+            let hash = 0;
+            for (let i = 0; i < text.length; i++) {
+                hash = text.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return (hash % 1000) / 10000;
         }
 
         function applySetup() {
             SCHOOL_CONFIG.district = document.getElementById('cfg-district').value.trim() || "District Unspecified";
             SCHOOL_CONFIG.school = document.getElementById('cfg-school').value.trim() || "School Campus";
             SCHOOL_CONFIG.address = document.getElementById('cfg-address').value.trim() || "";
+            SCHOOL_CONFIG.city = document.getElementById('cfg-city').value.trim() || "";
             SCHOOL_CONFIG.state_zip = document.getElementById('cfg-state-zip').value.trim() || "";
 
             let manualLat = parseFloat(document.getElementById('cfg-lat').value);
@@ -323,9 +319,13 @@
                 SCHOOL_CONFIG.lat = manualLat;
                 SCHOOL_CONFIG.lng = manualLng;
             } else {
-                let presetVal = document.getElementById('cfg-preset').value.split(',');
-                SCHOOL_CONFIG.lat = parseFloat(presetVal[0]);
-                SCHOOL_CONFIG.lng = parseFloat(presetVal[1]);
+                let textSeed = (SCHOOL_CONFIG.address + SCHOOL_CONFIG.city + SCHOOL_CONFIG.state_zip).toLowerCase();
+                let latOffset = textToCoordinateOffset(textSeed);
+                let lngOffset = textToCoordinateOffset(textSeed.split('').reverse().join(''));
+                
+                // Centers baseline in Virginia zone without locking to any town
+                SCHOOL_CONFIG.lat = 37.5000 + latOffset;
+                SCHOOL_CONFIG.lng = -78.8000 + lngOffset;
             }
 
             updateApp();
@@ -335,9 +335,10 @@
         function updateApp() {
             document.getElementById('header-district-name').innerText = (SCHOOL_CONFIG.district || "TACNET SCHOOL SYSTEM").toUpperCase();
             document.getElementById('driver-school-display').innerText = SCHOOL_CONFIG.school ? `${SCHOOL_CONFIG.school} - ${SCHOOL_CONFIG.district}` : "UNCONFIGURED";
-            document.getElementById('driver-address-display').innerText = SCHOOL_CONFIG.address ? `${SCHOOL_CONFIG.address}, ${SCHOOL_CONFIG.state_zip}` : "Location Unconfigured";
+            
+            let fullLocationStr = [SCHOOL_CONFIG.address, SCHOOL_CONFIG.city, SCHOOL_CONFIG.state_zip].filter(Boolean).join(', ');
+            document.getElementById('driver-address-display').innerText = fullLocationStr || "Location Unconfigured";
 
-            // Re-center fleet around new lat/lng coordinates
             fleet = [];
             for (let i = 1; i <= 20; i++) {
                 fleet.push({
@@ -451,7 +452,6 @@
         }
 
         window.onload = function() {
-            applyPresetCoordinates();
             updateApp();
         };
     </script>
