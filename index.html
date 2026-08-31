@@ -1,1 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TACNET SCHOOL - Standalone Platform</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        
+        body { 
+            background: #020926; 
+            color: #ffffff; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
 
+        .view-switcher {
+            height: 60px;
+            background: rgba(1, 10, 42, 0.95);
+            border-bottom: 2px solid #00f0ff;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 2000;
+            flex-shrink: 0;
+        }
+
+        .school-branding-tag {
+            font-size: 18px;
+            font-weight: 900;
+            color: #00f0ff;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn-group { display: flex; gap: 10px; }
+
+        .nav-btn { 
+            background: rgba(10, 50, 160, 0.7); 
+            color: #ffffff; 
+            border: 2px solid #00f0ff; 
+            padding: 8px 16px; 
+            border-radius: 8px; 
+            font-size: 14px;
+            font-weight: 800; 
+            cursor: pointer; 
+        }
+        .nav-btn.active { background: #00f0ff; color: #020926; box-shadow: 0 0 15px #00f0ff; }
+        .nav-btn-setup { border-color: #fbbf24; color: #fbbf24; }
+        .nav-btn-setup.active { background: #fbbf24; color: #020926; box-shadow: 0 0 15px #fbbf24; }
+
+        #main-container { flex: 1; position: relative; width: 100%; height: calc(100vh - 60px); }
+        .view-panel { width: 100%; height: 100%; display: flex; }
+        .hidden { display: none !important; }
+
+        /* SETUP PANEL */
+        #setup-view {
+            flex-direction: row;
+            padding: 20px;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .setup-card {
+            width: 480px;
+            background: rgba(0, 20, 60, 0.95);
+            border: 2px solid #fbbf24;
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .setup-map-card {
+            flex: 1;
+            height: 100%;
+            background: rgba(0, 120, 255, 0.05);
+            border: 2px solid #00f0ff;
+            border-radius: 18px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group.full-width { grid-column: span 2; }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 800;
+            color: #00f0ff;
+            text-transform: uppercase;
+        }
+
+        input[type="text"] {
+            background: #000000 !important;
+            color: #ffffff !important;
+            border: 2px solid #00f0ff !important;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #fbbf24 !important;
+            box-shadow: 0 0 10px #fbbf24;
+        }
+
+        .btn-save-setup {
+            background: #fbbf24;
+            color: #020926;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+        }
+
+        /* SVG MAP CANVAS CONTAINERS */
+        .svg-map-container {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            background: #06102e;
+            border-radius: 12px;
+            border: 1px solid #00f0ff;
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        svg { width: 100%; height: 100%; }
+
+        /* TOOLTIP HOVER DISPLAY */
+        .map-tooltip {
+            position: absolute;
+            background: rgba(0, 10, 30, 0.95);
+            border: 2px solid #00f0ff;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            display: none;
+            z-index: 3000;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+        }
+
+        /* DRIVER VIEW */
+        #driver-view { 
+            flex-direction: column; 
+            align-items: center;
+            padding: 20px; 
+            overflow-y: auto; 
+            gap: 15px;
+        }
+
+        .glass-card {
+            width: 100%;
+            max-width: 750px;
+            background: rgba(0, 120, 255, 0.12);
+            border: 2px solid rgba(0, 240, 255, 0.5);
+            border-radius: 18px;
+            padding: 20px;
+        }
+
+        .driver-header { text-align: center; border-bottom: 2px solid rgba(0, 240, 255, 0.3); padding-bottom: 12px; }
+        .main-title { font-size: 38px; font-weight: 900; color: #00f0ff; }
+        .school-title-sub { font-size: 22px; font-weight: 800; color: #ffffff; margin-top: 2px; }
+        .school-address-sub { font-size: 14px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
+
+        .grid-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+        .btn-large { padding: 20px; border-radius: 12px; border: 2px solid #fff; font-size: 22px; font-weight: 900; color: #fff; cursor: pointer; text-align: center; }
+        .btn-green { background: #16a34a; }
+        .btn-yellow { background: #ca8a04; }
+        .btn-orange { background: #ea580c; }
+        .btn-red { background: #991b1b; grid-column: span 2; font-size: 24px; padding: 22px; border: 3px solid #f87171; }
+
+        .select-driver-slot { background: #000; color: #00f0ff; border: 2px solid #00f0ff; padding: 10px; border-radius: 8px; font-size: 16px; font-weight: bold; width: 100%; margin-bottom: 10px; }
+
+        /* COMMAND MONITOR VIEW */
+        .sidebar { width: 380px; background: rgba(2, 9, 38, 0.95); border-right: 2px solid #00f0ff; display: flex; flex-direction: column; padding: 15px; gap: 12px; flex-shrink: 0; }
+        .panel-glass { background: rgba(0, 120, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 12px; padding: 12px; }
+        .input-row { display: flex; gap: 8px; margin-top: 8px; }
+        .input-row select { background: #000; color: #fff; border: 1px solid #00f0ff; padding: 8px; border-radius: 6px; flex: 1; }
+        .btn-group-row { display: flex; gap: 8px; margin-top: 8px; }
+        .action-btn { background: #00f0ff; color: #020926; border: none; padding: 10px; border-radius: 6px; font-weight: 800; cursor: pointer; flex: 2; }
+        .erase-btn { background: #ef4444; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: 800; cursor: pointer; flex: 1; }
+
+        .bus-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .bus-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; border-left: 4px solid #00f0ff; display: flex; justify-content: space-between; align-items: center; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 800; }
+        .badge-GREEN { background: #22c55e; color: #fff; }
+
+        .map-box { flex: 1; height: 100%; width: 100%; background: #050b1e; position: relative; }
+    </style>
+</head>
+<body>
+
+    <div class="view-switcher">
+        <div class="school-branding-tag" id="header-district-name">TACNET SCHOOL SYSTEM</div>
+        <div class="nav-btn-group">
+            <button id="tab-setup" class="nav-btn nav-btn-setup active" onclick="showView('setup')">⚙️ LOCATION SETUP</button>
+            <button id="tab-driver" class="nav-btn" onclick="showView('driver')">🏠 DRIVER UI</button>
+            <button id="tab-command" class="nav-btn" onclick="showView('command')">🖥️ MONITOR MAP</button>
+        </div>
+    </div>
+
+    <div id="main-container">
+
+        <div id="setup-view" class="view-panel">
+            <div class="setup-card">
+                <h2 style="color: #fbbf24; font-size: 18px; border-bottom: 2px solid #fbbf24; padding-bottom: 6px;">⚙️ NATIONWIDE LOCATION SETUP</h2>
+                
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>School District Name</label>
+                        <input type="text" id="cfg-district" placeholder="Enter District Name" autocomplete="off">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>School Campus Name</label>
+                        <input type="text" id="cfg-school" placeholder="Enter Campus Name" autocomplete="off">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label>Full Street Address</label>
+                        <input type="text" id="cfg-address" placeholder="Enter Street Address" autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label>City / Town</label>
+                        <input type="text" id="cfg-city" placeholder="Enter City/Town" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>State & Zip Code</label>
+                        <input type="text" id="cfg-state-zip" placeholder="Enter State & Zip" autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Latitude (Optional)</label>
+                        <input type="text" id="cfg-lat" placeholder="Auto-fills from map pin" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude (Optional)</label>
+                        <input type="text" id="cfg-lng" placeholder="Auto-fills from map pin" autocomplete="off">
+                    </div>
+                </div>
+
+                <button type="button" class="btn-save-setup" id="btn-save" onclick="applySetup()">💾 SAVE LOCATION & LOAD MONITOR MAP</button>
+            </div>
+
+            <div class="setup-map-card">
+                <div style="font-size: 14px; font-weight: bold; color: #00f0ff;">📍 CLICK ANYWHERE TO PIN CAMPUS LOCATION:</div>
+                <div class="svg-map-container" id="picker-container" onclick="handlePickerClick(event)">
+                    <svg id="picker-svg"></svg>
+                </div>
+            </div>
+        </div>
+        
+        <div id="driver-view" class="view-panel hidden">
+            <div class="glass-card">
+                <div class="driver-header">
+                    <div class="main-title">TACNET SCHOOL</div>
+                    <div class="school-title-sub" id="driver-school-display">UNCONFIGURED</div>
+                    <div class="school-address-sub" id="driver-address-display">Location Unconfigured</div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <label style="color: #00f0ff; font-weight: bold;">ACTIVE DRIVER UNIT:</label>
+                <select id="select-active-driver-slot" class="select-driver-slot" onchange="syncDriverView()"></select>
+                <div style="font-size: 26px; font-weight: 900; color: #00f0ff;" id="driver-bus-title">Slot #1</div>
+                <div style="font-size: 18px; color: #fff;" id="driver-name-sub">Driver: Unassigned</div>
+
+                <div class="grid-buttons">
+                    <button class="btn-large btn-green">GREEN</button>
+                    <button class="btn-large btn-yellow">YELLOW</button>
+                    <button class="btn-large btn-orange">ORANGE</button>
+                    <button class="btn-large btn-red">🚨 RED EMERGENCY</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="command-view" class="view-panel hidden">
+            <div class="sidebar">
+                <div class="panel-glass">
+                    <p style="color: #00f0ff; font-weight: bold;">✏️ ASSIGN BUS & DRIVER</p>
+                    <div class="input-row">
+                        <select id="select-slot" onchange="populateInputs()"></select>
+                    </div>
+                    <div class="input-row">
+                        <input type="text" id="input-bus-num" placeholder="Bus #" autocomplete="off">
+                        <input type="text" id="input-driver-name" placeholder="Driver Name" autocomplete="off">
+                    </div>
+                    <div class="btn-group-row">
+                        <button class="action-btn" onclick="saveSlot()">💾 Save Unit</button>
+                        <button class="erase-btn" onclick="clearSlot()">🗑️ Clear</button>
+                    </div>
+                </div>
+
+                <div style="font-size: 16px; font-weight: bold; color: #00f0ff;">Active Fleet Units</div>
+                <div class="bus-list" id="bus-list"></div>
+            </div>
+
+            <div class="map-box">
+                <div class="svg-map-container" id="monitor-container" onmousemove="handleHover(event)" onmouseleave="hideTooltip()">
+                    <svg id="monitor-svg"></svg>
+                    <div id="map-tooltip" class="map-tooltip"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let SCHOOL_CONFIG = {
+            district: "",
+            school: "",
+            address: "",
+            city: "",
+            state_zip: "",
+            pinX: 50,
+            pinY: 50
+        };
+
+        let fleet = [];
+
+        function drawGrid(svgId) {
+            let svg = document.getElementById(svgId);
+            let w = svg.clientWidth || 800;
+            let h = svg.clientHeight || 600;
+            
+            let gridHtml = `<rect width="100%" height="100%" fill="#040d28"/>`;
+            
+            // Draw coordinate grid lines
+            for (let x = 0; x < w; x += 40) {
+                gridHtml += `<line x1="${x}" y1="0" x2="${x}" y2="${h}" stroke="#00f0ff" stroke-width="0.5" opacity="0.15"/>`;
+            }
+            for (let y = 0; y < h; y += 40) {
+                gridHtml += `<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#00f0ff" stroke-width="0.5" opacity="0.15"/>`;
+            }
+
+            // Draw central campus baseline box
+            let cx = w * (SCHOOL_CONFIG.pinX / 100);
+            let cy = h * (SCHOOL_CONFIG.pinY / 100);
+            
+            gridHtml += `<rect x="${cx - 60}" y="${cy - 40}" width="120" height="80" rx="10" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4 4"/>`;
+            gridHtml += `<text x="${cx}" y="${cy - 45}" fill="#fbbf24" font-size="11" font-weight="bold" text-anchor="middle">CAMPUS BOUNDARY</text>`;
+
+            return { html: gridHtml, cx: cx, cy: cy };
+        }
+
+        function renderPickerMap() {
+            let svg = document.getElementById('picker-svg');
+            let grid = drawGrid('picker-svg');
+            
+            let pinHtml = grid.html + `
+                <circle cx="${grid.cx}" cy="${grid.cy}" r="10" fill="#fbbf24" stroke="#ffffff" stroke-width="3"/>
+                <circle cx="${grid.cx}" cy="${grid.cy}" r="22" fill="none" stroke="#fbbf24" stroke-width="1.5" opacity="0.6"/>
+                <text x="${grid.cx}" y="${grid.cy + 30}" fill="#00f0ff" font-size="12" font-weight="bold" text-anchor="middle">SELECTED LOCATION PIN</text>
+            `;
+            svg.innerHTML = pinHtml;
+        }
+
+        function handlePickerClick(e) {
+            let rect = document.getElementById('picker-container').getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+
+            SCHOOL_CONFIG.pinX = (x / rect.width) * 100;
+            SCHOOL_CONFIG.pinY = (y / rect.height) * 100;
+
+            document.getElementById('cfg-lat').value = (39.0000 + (SCHOOL_CONFIG.pinY * 0.01)).toFixed(6);
+            document.getElementById('cfg-lng').value = (-98.0000 + (SCHOOL_CONFIG.pinX * 0.01)).toFixed(6);
+
+            renderPickerMap();
+        }
+
+        function applySetup() {
+            SCHOOL_CONFIG.district = document.getElementById('cfg-district').value.trim() || "District Unspecified";
+            SCHOOL_CONFIG.school = document.getElementById('cfg-school').value.trim() || "School Campus";
+            SCHOOL_CONFIG.address = document.getElementById('cfg-address').value.trim() || "";
+            SCHOOL_CONFIG.city = document.getElementById('cfg-city').value.trim() || "";
+            SCHOOL_CONFIG.state_zip = document.getElementById('cfg-state-zip').value.trim() || "";
+
+            updateApp();
+            showView('command');
+        }
+
+        function getFormattedAddress() {
+            return [SCHOOL_CONFIG.address, SCHOOL_CONFIG.city, SCHOOL_CONFIG.state_zip].filter(Boolean).join(', ') || "Address Unconfigured";
+        }
+
+        function updateApp() {
+            document.getElementById('header-district-name').innerText = (SCHOOL_CONFIG.district || "TACNET SCHOOL SYSTEM").toUpperCase();
+            document.getElementById('driver-school-display').innerText = SCHOOL_CONFIG.school ? `${SCHOOL_CONFIG.school} - ${SCHOOL_CONFIG.district}` : "UNCONFIGURED";
+            document.getElementById('driver-address-display').innerText = getFormattedAddress();
+
+            fleet = [];
+            for (let i = 1; i <= 20; i++) {
+                fleet.push({
+                    slot: i,
+                    id: '',
+                    driver: '',
+                    status: 'GREEN',
+                    offsetX: (Math.random() - 0.5) * 40,
+                    offsetY: (Math.random() - 0.5) * 30
+                });
+            }
+
+            renderDropdowns();
+            renderSidebar();
+            populateInputs();
+            syncDriverView();
+            renderMonitorMap();
+        }
+
+        function renderMonitorMap() {
+            let svg = document.getElementById('monitor-svg');
+            let grid = drawGrid('monitor-svg');
+            
+            let mapContent = grid.html;
+
+            fleet.forEach((b) => {
+                let bx = grid.cx + (b.offsetX * 6);
+                let by = grid.cy + (b.offsetY * 6);
+                let unitTitle = b.id ? `Bus #${b.id}` : `Slot #${b.slot}`;
+
+                mapContent += `
+                    <g class="unit-dot" data-unit="${unitTitle}" data-driver="${b.driver || 'Unassigned'}">
+                        <circle cx="${bx}" cy="${by}" r="14" fill="rgba(0, 240, 255, 0.2)"/>
+                        <circle cx="${bx}" cy="${by}" r="8" fill="#00f0ff" stroke="#ffffff" stroke-width="2.5"/>
+                    </g>
+                `;
+            });
+
+            svg.innerHTML = mapContent;
+        }
+
+        function handleHover(e) {
+            let target = e.target.closest('.unit-dot');
+            let tooltip = document.getElementById('map-tooltip');
+
+            if (target) {
+                let unit = target.getAttribute('data-unit');
+                let driver = target.getAttribute('data-driver');
+                let address = getFormattedAddress();
+
+                tooltip.style.display = 'block';
+                tooltip.style.left = (e.clientX - document.getElementById('monitor-container').getBoundingClientRect().left + 15) + 'px';
+                tooltip.style.top = (e.clientY - document.getElementById('monitor-container').getBoundingClientRect().top - 35) + 'px';
+                
+                tooltip.innerHTML = `
+                    <b style="color: #00f0ff; font-size: 15px;">${unit}</b><br>
+                    <b>Driver:</b> ${driver}<br>
+                    <div style="margin-top: 4px; border-top: 1px solid rgba(0,240,255,0.4); padding-top: 4px; font-size: 12px; color: #fbbf24;">
+                        📍 ${address}
+                    </div>
+                `;
+            } else {
+                tooltip.style.display = 'none';
+            }
+        }
+
+        function hideTooltip() {
+            document.getElementById('map-tooltip').style.display = 'none';
+        }
+
+        function renderDropdowns() {
+            let options = fleet.map((b, i) => `<option value="${i}">${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot} ${b.driver ? '(' + b.driver + ')' : ''}</option>`).join('');
+            document.getElementById('select-slot').innerHTML = options;
+            document.getElementById('select-active-driver-slot').innerHTML = options;
+        }
+
+        function populateInputs() {
+            let i = parseInt(document.getElementById('select-slot').value) || 0;
+            document.getElementById('input-bus-num').value = fleet[i].id;
+            document.getElementById('input-driver-name').value = fleet[i].driver;
+        }
+
+        function saveSlot() {
+            let i = parseInt(document.getElementById('select-slot').value);
+            fleet[i].id = document.getElementById('input-bus-num').value.trim();
+            fleet[i].driver = document.getElementById('input-driver-name').value.trim();
+
+            renderDropdowns();
+            document.getElementById('select-slot').value = i;
+            renderSidebar();
+            syncDriverView();
+            renderMonitorMap();
+        }
+
+        function clearSlot() {
+            let i = parseInt(document.getElementById('select-slot').value);
+            fleet[i].id = '';
+            fleet[i].driver = '';
+            document.getElementById('input-bus-num').value = '';
+            document.getElementById('input-driver-name').value = '';
+
+            renderDropdowns();
+            document.getElementById('select-slot').value = i;
+            renderSidebar();
+            syncDriverView();
+            renderMonitorMap();
+        }
+
+        function syncDriverView() {
+            let i = parseInt(document.getElementById('select-active-driver-slot').value) || 0;
+            document.getElementById('driver-bus-title').innerText = fleet[i].id ? `Bus #${fleet[i].id}` : `Slot #${fleet[i].slot}`;
+            document.getElementById('driver-name-sub').innerText = fleet[i].driver ? `Driver: ${fleet[i].driver}` : `Driver: Unassigned`;
+        }
+
+        function renderSidebar() {
+            document.getElementById('bus-list').innerHTML = fleet.map(b => `
+                <div class="bus-item">
+                    <div><b>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</b> (${b.driver || 'Unassigned'})</div>
+                    <span class="badge badge-GREEN">${b.status}</span>
+                </div>
+            `).join('');
+        }
+
+        function showView(view) {
+            document.getElementById('setup-view').classList.toggle('hidden', view !== 'setup');
+            document.getElementById('driver-view').classList.toggle('hidden', view !== 'driver');
+            document.getElementById('command-view').classList.toggle('hidden', view !== 'command');
+
+            document.getElementById('tab-setup').classList.toggle('active', view === 'setup');
+            document.getElementById('tab-driver').classList.toggle('active', view === 'driver');
+            document.getElementById('tab-command').classList.toggle('active', view === 'command');
+
+            if (view === 'setup') setTimeout(renderPickerMap, 50);
+            if (view === 'command') setTimeout(renderMonitorMap, 50);
+        }
+
+        window.onload = function() {
+            updateApp();
+            renderPickerMap();
+        };
+
+        window.onresize = function() {
+            renderPickerMap();
+            renderMonitorMap();
+        };
+    </script>
+</body>
+</html>
