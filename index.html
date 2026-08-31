@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TACNET SCHOOL - Command & Tactical Platform</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; user-select: none; }
         
@@ -65,7 +67,7 @@
         }
 
         .setup-card {
-            width: 480px;
+            width: 440px;
             background: rgba(0, 20, 60, 0.95);
             border: 2px solid #fbbf24;
             border-radius: 18px;
@@ -118,7 +120,7 @@
             box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
         }
 
-        /* MAP DISPLAY CONTAINER */
+        /* MAP CONTAINERS */
         .map-card {
             flex: 1;
             height: 100%;
@@ -131,17 +133,10 @@
             flex-direction: column;
         }
 
-        .map-canvas-wrapper {
-            position: relative;
+        .leaflet-map-frame {
             width: 100%;
             height: 100%;
-            cursor: crosshair;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
+            z-index: 1;
         }
 
         /* DRIVER VIEW */
@@ -226,6 +221,7 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
+            cursor: pointer;
         }
         
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 900; }
@@ -234,25 +230,33 @@
         .badge-ORANGE { background: #ea580c; color: #fff; }
         .badge-RED { background: #dc2626; color: #fff; box-shadow: 0 0 10px #dc2626; }
 
-        .tooltip {
-            position: absolute;
-            background: rgba(2, 9, 38, 0.95);
-            border: 2px solid #00f0ff;
-            color: #ffffff;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            pointer-events: none;
-            display: none;
-            z-index: 6000;
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+        /* BUS MAP MARKERS */
+        .bus-marker-pin {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: #fff;
+            font-weight: 900;
+            font-size: 11px;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+        .bus-marker-GREEN { background: #16a34a; }
+        .bus-marker-YELLOW { background: #ca8a04; }
+        .bus-marker-ORANGE { background: #ea580c; }
+        .bus-marker-RED { background: #dc2626; animation: alertPulse 1s infinite alternate; }
+
+        @keyframes alertPulse {
+            0% { box-shadow: 0 0 5px #dc2626; transform: scale(1); }
+            100% { box-shadow: 0 0 25px #dc2626; transform: scale(1.25); }
         }
     </style>
 </head>
 <body>
 
     <div class="view-switcher">
-        <div class="school-branding-tag" id="header-district-name">TACNET SCHOOL SYSTEM</div>
+        <div class="school-branding-tag" id="header-district-name">AMHERST COUNTY PUBLIC SCHOOLS</div>
         <div class="nav-btn-group">
             <button id="tab-setup" class="nav-btn nav-btn-setup active" onclick="showView('setup')">⚙️ LOCATION SETUP</button>
             <button id="tab-driver" class="nav-btn" onclick="showView('driver')">🏠 DRIVER UI</button>
@@ -262,62 +266,62 @@
 
     <div id="main-container">
 
+        <!-- SETUP VIEW -->
         <div id="setup-view" class="view-panel">
             <div class="setup-card">
-                <h2 style="color: #fbbf24; font-size: 18px; border-bottom: 2px solid #fbbf24; padding-bottom: 6px;">⚙️ CAMPUS & LOCATION SETUP</h2>
+                <h2 style="color: #fbbf24; font-size: 18px; border-bottom: 2px solid #fbbf24; padding-bottom: 6px;">⚙️ CAMPUS LOCATION SETUP</h2>
                 
                 <div class="form-grid">
                     <div class="form-group full-width">
                         <label>School District Name</label>
-                        <input type="text" id="cfg-district" placeholder="Amherst County Public Schools" value="Amherst County Public Schools" autocomplete="off">
+                        <input type="text" id="cfg-district" value="Amherst County Public Schools">
                     </div>
                     <div class="form-group full-width">
                         <label>School Campus Name</label>
-                        <input type="text" id="cfg-school" placeholder="Amherst County High School" value="Amherst County High School" autocomplete="off">
+                        <input type="text" id="cfg-school" value="Amherst County High School">
                     </div>
                     
                     <div class="form-group full-width">
                         <label>Full Campus Street Address</label>
-                        <input type="text" id="cfg-address" placeholder="139 Lancer Lane" value="139 Lancer Lane" autocomplete="off">
+                        <input type="text" id="cfg-address" value="139 Lancer Lane">
                     </div>
 
                     <div class="form-group">
                         <label>City / Town</label>
-                        <input type="text" id="cfg-city" placeholder="Amherst" value="Amherst" autocomplete="off">
+                        <input type="text" id="cfg-city" value="Amherst">
                     </div>
                     <div class="form-group">
                         <label>State & Zip Code</label>
-                        <input type="text" id="cfg-state-zip" placeholder="VA 24521" value="VA 24521" autocomplete="off">
+                        <input type="text" id="cfg-state-zip" value="VA 24521">
                     </div>
                 </div>
 
-                <button type="button" class="btn-save-setup" onclick="applySetup()">💾 SAVE LOCATION & OPEN MONITOR MAP</button>
+                <button type="button" class="btn-save-setup" onclick="geocodeAndSave()">🔍 LOCATE ADDRESS & SAVE MAP</button>
             </div>
 
             <div class="map-card">
                 <div style="padding: 10px; background: rgba(0, 240, 255, 0.1); border-bottom: 1px solid #00f0ff; font-size: 13px; font-weight: bold; color: #00f0ff;">
-                    📍 CLICK ANYWHERE ON MAP TO PIN CAMPUS CENTER
+                    📍 CLICK MAP TO SET PRECISE CAMPUS CENTER
                 </div>
-                <div class="map-canvas-wrapper" id="setup-canvas-wrap">
-                    <canvas id="setupCanvas"></canvas>
-                </div>
+                <div id="setupMap" class="leaflet-map-frame"></div>
             </div>
         </div>
         
+        <!-- DRIVER VIEW -->
         <div id="driver-view" class="view-panel hidden">
             <div class="glass-card">
                 <div class="driver-header">
                     <div class="main-title">TACNET SCHOOL</div>
-                    <div class="school-title-sub" id="driver-school-display">UNCONFIGURED</div>
-                    <div class="school-address-sub" id="driver-address-display">Location Unconfigured</div>
+                    <div class="school-title-sub" id="driver-school-display">Amherst County High School</div>
+                    <div class="school-address-sub" id="driver-address-display">139 Lancer Lane, Amherst, VA 24521</div>
                 </div>
             </div>
 
             <div class="glass-card">
-                <label style="color: #00f0ff; font-weight: bold;">ACTIVE BUS UNIT:</label>
+                <label style="color: #00f0ff; font-weight: bold;">SELECT YOUR BUS UNIT:</label>
                 <select id="select-active-driver-slot" class="select-driver-slot" onchange="syncDriverView()"></select>
-                <div style="font-size: 26px; font-weight: 900; color: #00f0ff;" id="driver-bus-title">Slot #1</div>
-                <div style="font-size: 18px; color: #fff;" id="driver-name-sub">Driver: Unassigned</div>
+                <div style="font-size: 26px; font-weight: 900; color: #00f0ff;" id="driver-bus-title">Bus #101</div>
+                <div style="font-size: 18px; color: #fff;" id="driver-name-sub">Driver: John Doe</div>
 
                 <div class="grid-buttons">
                     <button class="btn-status btn-green" onclick="setDriverStatus('GREEN')">GREEN (NORMAL)</button>
@@ -328,6 +332,7 @@
             </div>
         </div>
 
+        <!-- COMMAND MONITOR VIEW -->
         <div id="command-view" class="view-panel hidden">
             <div class="sidebar">
                 <div class="panel-glass">
@@ -336,8 +341,8 @@
                         <select id="select-slot" onchange="populateInputs()"></select>
                     </div>
                     <div class="input-row">
-                        <input type="text" id="input-bus-num" placeholder="Bus #" autocomplete="off">
-                        <input type="text" id="input-driver-name" placeholder="Driver Name" autocomplete="off">
+                        <input type="text" id="input-bus-num" placeholder="Bus #">
+                        <input type="text" id="input-driver-name" placeholder="Driver Name">
                     </div>
                     <div class="btn-group-row">
                         <button class="action-btn" onclick="saveSlot()">💾 Save Unit</button>
@@ -350,199 +355,183 @@
             </div>
 
             <div class="map-card">
-                <div class="map-canvas-wrapper" id="monitor-canvas-wrap">
-                    <canvas id="monitorCanvas"></canvas>
-                    <div id="tooltip" class="tooltip"></div>
-                </div>
+                <div id="monitorMap" class="leaflet-map-frame"></div>
             </div>
         </div>
 
     </div>
 
     <script>
+        // Default center: Amherst County High School, VA
+        let centerLat = 37.5755;
+        let centerLng = -79.0531;
+
+        let setupMap, monitorMap;
+        let setupMarker, perimeterPolygon;
+        let busMapMarkers = [];
+
         let CONFIG = {
             district: "Amherst County Public Schools",
             school: "Amherst County High School",
             address: "139 Lancer Lane",
             city: "Amherst",
-            state_zip: "VA 24521",
-            pinX: 0.5,
-            pinY: 0.5
+            state_zip: "VA 24521"
         };
 
         let fleet = [];
-        let activeDriverIndex = 0;
 
         function initFleet() {
             fleet = [];
             for (let i = 1; i <= 20; i++) {
+                // Spread buses around the campus location
+                let offsetLat = (Math.random() - 0.5) * 0.012;
+                let offsetLng = (Math.random() - 0.5) * 0.012;
                 fleet.push({
                     slot: i,
                     id: i === 1 ? '101' : (i === 2 ? '104' : ''),
                     driver: i === 1 ? 'John Doe' : (i === 2 ? 'Jane Smith' : ''),
                     status: 'GREEN',
-                    relX: (Math.random() - 0.5) * 0.5,
-                    relY: (Math.random() - 0.5) * 0.4
+                    lat: centerLat + offsetLat,
+                    lng: centerLng + offsetLng
                 });
             }
         }
 
-        /* DIRECT CANVAS MAP RENDERER - NO CDN OR WEB TILES NEEDED */
-        function renderCanvasMap(canvasId, isSetup) {
-            let canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            let wrap = canvas.parentElement;
-            
-            canvas.width = wrap.clientWidth;
-            canvas.height = wrap.clientHeight;
-            
-            let ctx = canvas.getContext('2d');
-            let w = canvas.width;
-            let h = canvas.height;
+        function initMaps() {
+            // Setup Map
+            setupMap = L.map('setupMap').setView([centerLat, centerLng], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(setupMap);
 
-            // Background terrain base
-            ctx.fillStyle = '#06122e';
-            ctx.fillRect(0, 0, w, h);
-
-            // Draw Road Grid Network
-            ctx.strokeStyle = '#1e293b';
-            ctx.lineWidth = 24;
-            ctx.beginPath();
-            
-            // Major highways and roads
-            ctx.moveTo(0, h * 0.3); ctx.lineTo(w, h * 0.35);
-            ctx.moveTo(0, h * 0.7); ctx.lineTo(w, h * 0.65);
-            ctx.moveTo(w * 0.25, 0); ctx.lineTo(w * 0.3, h);
-            ctx.moveTo(w * 0.75, 0); ctx.lineTo(w * 0.7, h);
-            ctx.stroke();
-
-            // Primary Access Road
-            ctx.strokeStyle = '#334155';
-            ctx.lineWidth = 14;
-            ctx.beginPath();
-            ctx.moveTo(w * 0.3, h * 0.32);
-            ctx.lineTo(w * CONFIG.pinX, h * CONFIG.pinY);
-            ctx.stroke();
-
-            // Campus Perimeter Boundary Box
-            let cx = w * CONFIG.pinX;
-            let cy = h * CONFIG.pinY;
-            let pw = 240;
-            let ph = 160;
-
-            ctx.fillStyle = 'rgba(0, 240, 255, 0.08)';
-            ctx.fillRect(cx - pw/2, cy - ph/2, pw, ph);
-
-            ctx.strokeStyle = '#fbbf24';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([8, 6]);
-            ctx.strokeRect(cx - pw/2, cy - ph/2, pw, ph);
-            ctx.setLineDash([]);
-
-            // Campus Label
-            ctx.fillStyle = '#fbbf24';
-            ctx.font = 'bold 13px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(`🏫 CAMPUS PERIMETER BOUNDARY`, cx, cy - ph/2 - 10);
-
-            if (isSetup) {
-                // Setup Pin Icon
-                ctx.fillStyle = '#fbbf24';
-                ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke();
-            } else {
-                // Draw Active Bus Units
-                fleet.forEach((b, idx) => {
-                    let bx = cx + (b.relX * w);
-                    let by = cy + (b.relY * h);
-                    b.currentX = bx;
-                    b.currentY = by;
-
-                    let color = '#22c55e';
-                    if (b.status === 'YELLOW') color = '#eab308';
-                    if (b.status === 'ORANGE') color = '#f97316';
-                    if (b.status === 'RED') color = '#ef4444';
-
-                    // Outer pulse ring
-                    ctx.fillStyle = color;
-                    ctx.globalAlpha = 0.3;
-                    ctx.beginPath(); ctx.arc(bx, by, 18, 0, Math.PI * 2); ctx.fill();
-                    ctx.globalAlpha = 1.0;
-
-                    // Inner Marker Circle
-                    ctx.beginPath(); ctx.arc(bx, by, 10, 0, Math.PI * 2); ctx.fill();
-                    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.stroke();
-
-                    // Bus Number Text Label
-                    ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 11px Arial';
-                    ctx.textAlign = 'center';
-                    let label = b.id ? `#${b.id}` : `S#${b.slot}`;
-                    ctx.fillText(label, bx, by - 14);
-                });
-            }
-        }
-
-        // Setup Map Click Handler
-        document.getElementById('setup-canvas-wrap').addEventListener('click', function(e) {
-            let rect = this.getBoundingClientRect();
-            CONFIG.pinX = (e.clientX - rect.left) / rect.width;
-            CONFIG.pinY = (e.clientY - rect.top) / rect.height;
-            renderCanvasMap('setupCanvas', true);
-        });
-
-        // Command Map Hover Tooltip Handler
-        let monitorWrap = document.getElementById('monitor-canvas-wrap');
-        let tooltip = document.getElementById('tooltip');
-
-        monitorWrap.addEventListener('mousemove', function(e) {
-            let rect = this.getBoundingClientRect();
-            let mx = e.clientX - rect.left;
-            let my = e.clientY - rect.top;
-            
-            let found = false;
-            fleet.forEach(b => {
-                if (b.currentX && Math.hypot(b.currentX - mx, b.currentY - my) < 18) {
-                    found = true;
-                    tooltip.style.display = 'block';
-                    tooltip.style.left = (mx + 15) + 'px';
-                    tooltip.style.top = (my - 20) + 'px';
-                    
-                    let unitTitle = b.id ? `Bus #${b.id}` : `Slot #${b.slot}`;
-                    let fullAddr = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ');
-
-                    tooltip.innerHTML = `
-                        <b style="color:#00f0ff; font-size: 15px;">${unitTitle}</b><br>
-                        <b>Driver:</b> ${b.driver || 'Unassigned'}<br>
-                        <b>Status:</b> <span style="color:#fbbf24">${b.status}</span><br>
-                        <div style="margin-top:4px; border-top:1px solid #00f0ff; padding-top:4px; font-size:11px;">
-                            📍 ${fullAddr}
-                        </div>
-                    `;
-                }
+            setupMarker = L.marker([centerLat, centerLng], { draggable: true }).addTo(setupMap);
+            setupMarker.on('dragend', function (e) {
+                let coord = e.target.getLatLng();
+                centerLat = coord.lat;
+                centerLng = coord.lng;
+                updateCampusPerimeter();
             });
 
-            if (!found) tooltip.style.display = 'none';
-        });
+            setupMap.on('click', function(e) {
+                centerLat = e.latlng.lat;
+                centerLng = e.latlng.lng;
+                setupMarker.setLatLng(e.latlng);
+                updateCampusPerimeter();
+            });
 
-        monitorWrap.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+            // Command Monitor Map
+            monitorMap = L.map('monitorMap').setView([centerLat, centerLng], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(monitorMap);
 
-        function applySetup() {
-            CONFIG.district = document.getElementById('cfg-district').value.trim() || "District Unspecified";
-            CONFIG.school = document.getElementById('cfg-school').value.trim() || "School Campus";
-            CONFIG.address = document.getElementById('cfg-address').value.trim() || "";
-            CONFIG.city = document.getElementById('cfg-city').value.trim() || "";
-            CONFIG.state_zip = document.getElementById('cfg-state-zip').value.trim() || "";
+            updateCampusPerimeter();
+            renderBusMarkers();
+        }
 
-            updateApp();
-            showView('command');
+        function updateCampusPerimeter() {
+            let latDelta = 0.0025;
+            let lngDelta = 0.004;
+            let bounds = [
+                [centerLat + latDelta, centerLng - lngDelta],
+                [centerLat + latDelta, centerLng + lngDelta],
+                [centerLat - latDelta, centerLng + lngDelta],
+                [centerLat - latDelta, centerLng - lngDelta]
+            ];
+
+            if (perimeterPolygon) {
+                monitorMap.removeLayer(perimeterPolygon);
+            }
+
+            perimeterPolygon = L.polygon(bounds, {
+                color: '#fbbf24',
+                weight: 3,
+                dashArray: '8, 8',
+                fillColor: '#00f0ff',
+                fillOpacity: 0.12
+            }).addTo(monitorMap);
+
+            perimeterPolygon.bindTooltip("🏫 CAMPUS PERIMETER BOUNDARY", { permanent: true, direction: "top" });
+        }
+
+        function geocodeAndSave() {
+            CONFIG.district = document.getElementById('cfg-district').value;
+            CONFIG.school = document.getElementById('cfg-school').value;
+            CONFIG.address = document.getElementById('cfg-address').value;
+            CONFIG.city = document.getElementById('cfg-city').value;
+            CONFIG.state_zip = document.getElementById('cfg-state-zip').value;
+
+            let fullQuery = `${CONFIG.address}, ${CONFIG.city}, ${CONFIG.state_zip}`;
+            
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullQuery)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        centerLat = parseFloat(data[0].lat);
+                        centerLng = parseFloat(data[0].lon);
+
+                        setupMap.setView([centerLat, centerLng], 16);
+                        setupMarker.setLatLng([centerLat, centerLng]);
+                        monitorMap.setView([centerLat, centerLng], 16);
+
+                        // Recalculate bus positions around new target address
+                        fleet.forEach(b => {
+                            b.lat = centerLat + (Math.random() - 0.5) * 0.012;
+                            b.lng = centerLng + (Math.random() - 0.5) * 0.012;
+                        });
+
+                        updateCampusPerimeter();
+                        renderBusMarkers();
+                        updateApp();
+                        showView('command');
+                    } else {
+                        alert("Address search failed. Please click directly on the map to set the campus position.");
+                    }
+                })
+                .catch(() => {
+                    updateCampusPerimeter();
+                    renderBusMarkers();
+                    updateApp();
+                    showView('command');
+                });
+        }
+
+        function renderBusMarkers() {
+            busMapMarkers.forEach(m => monitorMap.removeLayer(m));
+            busMapMarkers = [];
+
+            fleet.forEach(b => {
+                let unitLabel = b.id ? `#${b.id}` : `S#${b.slot}`;
+                let customIcon = L.divIcon({
+                    className: 'custom-bus-icon',
+                    html: `<div class="bus-marker-pin bus-marker-${b.status}" style="width:28px; height:28px;">${unitLabel}</div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                });
+
+                let marker = L.marker([b.lat, b.lng], { icon: customIcon }).addTo(monitorMap);
+                let fullAddr = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ');
+                
+                marker.bindPopup(`
+                    <div style="color:#020926; font-family:sans-serif;">
+                        <b style="font-size:15px; color:#0055ff;">Bus ${b.id ? '#' + b.id : 'Slot #' + b.slot}</b><br>
+                        <b>Driver:</b> ${b.driver || 'Unassigned'}<br>
+                        <b>Status:</b> <b>${b.status}</b><br>
+                        <small>📍 ${fullAddr}</small>
+                    </div>
+                `);
+
+                busMapMarkers.push(marker);
+            });
         }
 
         function setDriverStatus(status) {
             let i = parseInt(document.getElementById('select-active-driver-slot').value) || 0;
             fleet[i].status = status;
             renderSidebar();
-            renderCanvasMap('monitorCanvas', false);
+            renderBusMarkers();
         }
 
         function updateApp() {
@@ -577,7 +566,7 @@
             document.getElementById('select-slot').value = i;
             renderSidebar();
             syncDriverView();
-            renderCanvasMap('monitorCanvas', false);
+            renderBusMarkers();
         }
 
         function clearSlot() {
@@ -591,7 +580,7 @@
             document.getElementById('select-slot').value = i;
             renderSidebar();
             syncDriverView();
-            renderCanvasMap('monitorCanvas', false);
+            renderBusMarkers();
         }
 
         function syncDriverView() {
@@ -601,12 +590,20 @@
         }
 
         function renderSidebar() {
-            document.getElementById('bus-list').innerHTML = fleet.map(b => `
-                <div class="bus-item" style="border-left-color: ${b.status==='GREEN'?'#22c55e':(b.status==='YELLOW'?'#eab308':(b.status==='ORANGE'?'#f97316':'#ef4444'))}">
+            document.getElementById('bus-list').innerHTML = fleet.map((b, i) => `
+                <div class="bus-item" onclick="focusBusOnMap(${i})" style="border-left-color: ${b.status==='GREEN'?'#22c55e':(b.status==='YELLOW'?'#eab308':(b.status==='ORANGE'?'#f97316':'#ef4444'))}">
                     <div><b>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</b> (${b.driver || 'Unassigned'})</div>
                     <span class="badge badge-${b.status}">${b.status}</span>
                 </div>
             `).join('');
+        }
+
+        function focusBusOnMap(index) {
+            let b = fleet[index];
+            monitorMap.setView([b.lat, b.lng], 18);
+            if (busMapMarkers[index]) {
+                busMapMarkers[index].openPopup();
+            }
         }
 
         function showView(view) {
@@ -619,20 +616,16 @@
             document.getElementById('tab-command').classList.toggle('active', view === 'command');
 
             setTimeout(() => {
-                if (view === 'setup') renderCanvasMap('setupCanvas', true);
-                if (view === 'command') renderCanvasMap('monitorCanvas', false);
-            }, 50);
+                if (view === 'setup' && setupMap) setupMap.invalidateSize();
+                if (view === 'command' && monitorMap) monitorMap.invalidateSize();
+            }, 100);
         }
 
         window.onload = function() {
             initFleet();
+            initMaps();
             updateApp();
             showView('setup');
-        };
-
-        window.onresize = function() {
-            renderCanvasMap('setupCanvas', true);
-            renderCanvasMap('monitorCanvas', false);
         };
     </script>
 </body>
