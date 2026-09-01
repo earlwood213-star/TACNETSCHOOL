@@ -8,262 +8,63 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; user-select: none; }
-        
-        body { 
-            background: #020926; 
-            color: #ffffff; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-        }
-
-        /* HEADER NAVIGATION */
-        .view-switcher {
-            height: 60px;
-            background: rgba(1, 10, 42, 0.98);
-            border-bottom: 2px solid #00f0ff;
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 5000;
-            flex-shrink: 0;
-        }
-
-        .school-branding-tag {
-            font-size: 18px;
-            font-weight: 900;
-            color: #00f0ff;
-            letter-spacing: 1px;
-        }
-
+        body { background: #020926; color: #ffffff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .view-switcher { height: 60px; background: rgba(1, 10, 42, 0.98); border-bottom: 2px solid #00f0ff; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; z-index: 5000; flex-shrink: 0; }
+        .school-branding-tag { font-size: 18px; font-weight: 900; color: #00f0ff; letter-spacing: 1px; }
         .nav-btn-group { display: flex; gap: 10px; }
-
-        .nav-btn { 
-            background: rgba(10, 50, 160, 0.7); 
-            color: #ffffff; 
-            border: 2px solid #00f0ff; 
-            padding: 8px 16px; 
-            border-radius: 8px; 
-            font-size: 14px;
-            font-weight: 800; 
-            cursor: pointer; 
-        }
+        .nav-btn { background: rgba(10, 50, 160, 0.7); color: #ffffff; border: 2px solid #00f0ff; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; }
         .nav-btn.active { background: #00f0ff; color: #020926; box-shadow: 0 0 15px #00f0ff; }
         .nav-btn-setup { border-color: #fbbf24; color: #fbbf24; }
         .nav-btn-setup.active { background: #fbbf24; color: #020926; box-shadow: 0 0 15px #fbbf24; }
-
         #main-container { flex: 1; position: relative; width: 100%; height: calc(100vh - 60px); }
         .view-panel { width: 100%; height: 100%; display: flex; }
         .hidden { display: none !important; }
-
-        /* SETUP PANEL */
-        #setup-view {
-            flex-direction: row;
-            padding: 20px;
-            gap: 20px;
-            overflow-y: auto;
-        }
-
-        .setup-card {
-            width: 440px;
-            background: rgba(0, 20, 60, 0.95);
-            border: 2px solid #fbbf24;
-            border-radius: 18px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-
+        #setup-view { flex-direction: row; padding: 20px; gap: 20px; overflow-y: auto; }
+        .setup-card { width: 440px; background: rgba(0, 20, 60, 0.95); border: 2px solid #fbbf24; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px; flex-shrink: 0; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .form-group { display: flex; flex-direction: column; gap: 4px; }
         .form-group.full-width { grid-column: span 2; }
-
-        .form-group label {
-            font-size: 11px;
-            font-weight: 800;
-            color: #00f0ff;
-            text-transform: uppercase;
-        }
-
-        input[type="text"] {
-            background: #000000 !important;
-            color: #ffffff !important;
-            border: 2px solid #00f0ff !important;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            user-select: text;
-        }
-
-        input[type="text"]:focus {
-            border-color: #fbbf24 !important;
-            box-shadow: 0 0 10px #fbbf24;
-        }
-
-        .btn-save-setup {
-            background: #fbbf24;
-            color: #020926;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 900;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 8px;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
-        }
-
-        /* MAP CONTAINERS */
-        .map-card {
-            flex: 1;
-            height: 100%;
-            background: #000000;
-            border: 2px solid #00f0ff;
-            border-radius: 18px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .leaflet-map-frame {
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-        /* DRIVER VIEW */
-        #driver-view { 
-            flex-direction: column; 
-            align-items: center;
-            padding: 20px; 
-            overflow-y: auto; 
-            gap: 15px;
-        }
-
-        .glass-card {
-            width: 100%;
-            max-width: 750px;
-            background: rgba(0, 120, 255, 0.12);
-            border: 2px solid rgba(0, 240, 255, 0.5);
-            border-radius: 18px;
-            padding: 20px;
-        }
-
+        .form-group label { font-size: 11px; font-weight: 800; color: #00f0ff; text-transform: uppercase; }
+        input[type="text"] { background: #000000 !important; color: #ffffff !important; border: 2px solid #00f0ff !important; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; }
+        .btn-save-setup { background: #fbbf24; color: #020926; border: none; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: 900; cursor: pointer; width: 100%; margin-top: 8px; text-transform: uppercase; }
+        .map-card { flex: 1; height: 100%; background: #000000; border: 2px solid #00f0ff; border-radius: 18px; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        .leaflet-map-frame { width: 100%; height: 100%; z-index: 1; }
+        #driver-view { flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; gap: 15px; }
+        .glass-card { width: 100%; max-width: 750px; background: rgba(0, 120, 255, 0.12); border: 2px solid rgba(0, 240, 255, 0.5); border-radius: 18px; padding: 20px; }
         .driver-header { text-align: center; border-bottom: 2px solid rgba(0, 240, 255, 0.3); padding-bottom: 12px; }
         .main-title { font-size: 38px; font-weight: 900; color: #00f0ff; }
         .school-title-sub { font-size: 22px; font-weight: 800; color: #ffffff; margin-top: 2px; }
         .school-address-sub { font-size: 14px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
-
         .grid-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
-        .btn-status { 
-            padding: 22px; 
-            border-radius: 12px; 
-            border: 3px solid #ffffff; 
-            font-size: 22px; 
-            font-weight: 900; 
-            color: #ffffff; 
-            cursor: pointer; 
-            text-align: center;
-            transition: transform 0.1s;
-        }
-        .btn-status:active { transform: scale(0.97); }
+        .btn-status { padding: 22px; border-radius: 12px; border: 3px solid #ffffff; font-size: 22px; font-weight: 900; color: #ffffff; cursor: pointer; text-align: center; }
         .btn-green { background: #16a34a; border-color: #4ade80; }
         .btn-yellow { background: #ca8a04; border-color: #fde047; }
         .btn-orange { background: #ea580c; border-color: #fdba74; }
-        .btn-red { background: #991b1b; grid-column: span 2; font-size: 26px; padding: 24px; border-color: #f87171; box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
-
-        .select-driver-slot { 
-            background: #000; 
-            color: #00f0ff; 
-            border: 2px solid #00f0ff; 
-            padding: 10px; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            font-weight: bold; 
-            width: 100%; 
-            margin-bottom: 10px; 
-            outline: none;
-        }
-
-        /* COMMAND MONITOR VIEW */
-        .sidebar { 
-            width: 380px; 
-            background: rgba(2, 9, 38, 0.95); 
-            border-right: 2px solid #00f0ff; 
-            display: flex; 
-            flex-direction: column; 
-            padding: 15px; 
-            gap: 12px; 
-            flex-shrink: 0; 
-        }
-        
+        .btn-red { background: #991b1b; grid-column: span 2; font-size: 26px; padding: 24px; border-color: #f87171; }
+        .select-driver-slot { background: #000; color: #00f0ff; border: 2px solid #00f0ff; padding: 10px; border-radius: 8px; font-size: 16px; font-weight: bold; width: 100%; margin-bottom: 10px; outline: none; }
+        .sidebar { width: 380px; background: rgba(2, 9, 38, 0.95); border-right: 2px solid #00f0ff; display: flex; flex-direction: column; padding: 15px; gap: 12px; flex-shrink: 0; }
         .panel-glass { background: rgba(0, 120, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 12px; padding: 12px; }
         .input-row { display: flex; gap: 8px; margin-top: 8px; }
         .input-row select { background: #000; color: #fff; border: 1px solid #00f0ff; padding: 8px; border-radius: 6px; flex: 1; }
         .btn-group-row { display: flex; gap: 8px; margin-top: 8px; }
         .action-btn { background: #00f0ff; color: #020926; border: none; padding: 10px; border-radius: 6px; font-weight: 800; cursor: pointer; flex: 2; }
         .erase-btn { background: #ef4444; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: 800; cursor: pointer; flex: 1; }
-
         .bus-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-        .bus-item { 
-            background: rgba(255,255,255,0.05); 
-            padding: 10px; 
-            border-radius: 6px; 
-            border-left: 5px solid #00f0ff; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            cursor: pointer;
-        }
-        
+        .bus-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 6px; border-left: 5px solid #00f0ff; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 900; }
         .badge-GREEN { background: #16a34a; color: #fff; }
         .badge-YELLOW { background: #ca8a04; color: #fff; }
         .badge-ORANGE { background: #ea580c; color: #fff; }
-        .badge-RED { background: #dc2626; color: #fff; box-shadow: 0 0 10px #dc2626; }
-
-        /* BUS & ADDRESS MARKERS */
-        .bus-marker-pin {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            color: #fff;
-            font-weight: 900;
-            font-size: 11px;
-            border: 2px solid #ffffff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.8);
-        }
+        .badge-RED { background: #dc2626; color: #fff; }
+        .bus-marker-pin { display: flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; font-weight: 900; font-size: 11px; border: 2px solid #ffffff; }
         .bus-marker-GREEN { background: #16a34a; }
         .bus-marker-YELLOW { background: #ca8a04; }
         .bus-marker-ORANGE { background: #ea580c; }
-        .bus-marker-RED { background: #dc2626; animation: alertPulse 1s infinite alternate; }
-
-        .address-pin-dot {
-            width: 20px;
-            height: 20px;
-            background: #fbbf24;
-            border: 3px solid #ffffff;
-            border-radius: 50%;
-            box-shadow: 0 0 15px #fbbf24;
-        }
-
-        @keyframes alertPulse {
-            0% { box-shadow: 0 0 5px #dc2626; transform: scale(1); }
-            100% { box-shadow: 0 0 25px #dc2626; transform: scale(1.25); }
-        }
+        .bus-marker-RED { background: #dc2626; }
+        .address-pin-dot { width: 20px; height: 20px; background: #fbbf24; border: 3px solid #ffffff; border-radius: 50%; }
     </style>
 </head>
 <body>
-
     <div class="view-switcher">
         <div class="school-branding-tag" id="header-district-name">SCHOOL DISTRICT NAME</div>
         <div class="nav-btn-group">
@@ -272,51 +73,24 @@
             <button id="tab-command" class="nav-btn" onclick="showView('command')">🖥️ MONITOR MAP</button>
         </div>
     </div>
-
     <div id="main-container">
-
-        <!-- SETUP VIEW -->
         <div id="setup-view" class="view-panel">
             <div class="setup-card">
                 <h2 style="color: #fbbf24; font-size: 18px; border-bottom: 2px solid #fbbf24; padding-bottom: 6px;">⚙️ CAMPUS LOCATION SETUP</h2>
-                
                 <div class="form-grid">
-                    <div class="form-group full-width">
-                        <label>School District Name</label>
-                        <input type="text" id="cfg-district" placeholder="e.g. County Public Schools">
-                    </div>
-                    <div class="form-group full-width">
-                        <label>School Campus Name</label>
-                        <input type="text" id="cfg-school" placeholder="e.g. Central High School">
-                    </div>
-                    
-                    <div class="form-group full-width">
-                        <label>Full Campus Street Address</label>
-                        <input type="text" id="cfg-address" placeholder="e.g. 100 Education Way">
-                    </div>
-
-                    <div class="form-group">
-                        <label>City / Town</label>
-                        <input type="text" id="cfg-city" placeholder="City">
-                    </div>
-                    <div class="form-group">
-                        <label>State & Zip Code</label>
-                        <input type="text" id="cfg-state-zip" placeholder="ST 00000">
-                    </div>
+                    <div class="form-group full-width"><label>School District Name</label><input type="text" id="cfg-district" placeholder="District Name"></div>
+                    <div class="form-group full-width"><label>School Campus Name</label><input type="text" id="cfg-school" placeholder="School Name"></div>
+                    <div class="form-group full-width"><label>Full Campus Street Address</label><input type="text" id="cfg-address" placeholder="Street Address"></div>
+                    <div class="form-group"><label>City / Town</label><input type="text" id="cfg-city" placeholder="City"></div>
+                    <div class="form-group"><label>State & Zip Code</label><input type="text" id="cfg-state-zip" placeholder="ST Zip"></div>
                 </div>
-
-                <button type="button" class="btn-save-setup" onclick="geocodeAndSave()">🔍 LOCATE ADDRESS & SAVE MAP</button>
+                <button type="button" class="btn-save-setup" onclick="geocodeAndSave()">💾 SAVE & LAUNCH MAP</button>
             </div>
-
             <div class="map-card">
-                <div style="padding: 10px; background: rgba(0, 240, 255, 0.1); border-bottom: 1px solid #00f0ff; font-size: 13px; font-weight: bold; color: #00f0ff;">
-                    📍 CLICK MAP OR DRAG PIN TO SET EXACT CAMPUS CENTER
-                </div>
+                <div style="padding: 10px; background: rgba(0, 240, 255, 0.1); border-bottom: 1px solid #00f0ff; font-size: 13px; font-weight: bold; color: #00f0ff;">📍 CLICK MAP TO SET CAMPUS CENTER</div>
                 <div id="setupMap" class="leaflet-map-frame"></div>
             </div>
         </div>
-        
-        <!-- DRIVER VIEW -->
         <div id="driver-view" class="view-panel hidden">
             <div class="glass-card">
                 <div class="driver-header">
@@ -325,13 +99,11 @@
                     <div class="school-address-sub" id="driver-address-display">Configure Address in Setup</div>
                 </div>
             </div>
-
             <div class="glass-card">
                 <label style="color: #00f0ff; font-weight: bold;">SELECT YOUR BUS UNIT:</label>
                 <select id="select-active-driver-slot" class="select-driver-slot" onchange="syncDriverView()"></select>
                 <div style="font-size: 26px; font-weight: 900; color: #00f0ff;" id="driver-bus-title">Bus #101</div>
                 <div style="font-size: 18px; color: #fff;" id="driver-name-sub">Driver: Unassigned</div>
-
                 <div class="grid-buttons">
                     <button class="btn-status btn-green" onclick="setDriverStatus('GREEN')">GREEN (NORMAL)</button>
                     <button class="btn-status btn-yellow" onclick="setDriverStatus('YELLOW')">YELLOW (DELAY)</button>
@@ -340,343 +112,115 @@
                 </div>
             </div>
         </div>
-
-        <!-- COMMAND MONITOR VIEW -->
         <div id="command-view" class="view-panel hidden">
             <div class="sidebar">
                 <div class="panel-glass">
                     <p style="color: #00f0ff; font-weight: bold;">✏️ ASSIGN BUS & DRIVER</p>
-                    <div class="input-row">
-                        <select id="select-slot" onchange="populateInputs()"></select>
-                    </div>
-                    <div class="input-row">
-                        <input type="text" id="input-bus-num" placeholder="Bus #">
-                        <input type="text" id="input-driver-name" placeholder="Driver Name">
-                    </div>
-                    <div class="btn-group-row">
-                        <button class="action-btn" onclick="saveSlot()">💾 Save Unit</button>
-                        <button class="erase-btn" onclick="clearSlot()">🗑️ Clear</button>
-                    </div>
+                    <div class="input-row"><select id="select-slot" onchange="populateInputs()"></select></div>
+                    <div class="input-row"><input type="text" id="input-bus-num" placeholder="Bus #"><input type="text" id="input-driver-name" placeholder="Driver Name"></div>
+                    <div class="btn-group-row"><button class="action-btn" onclick="saveSlot()">💾 Save Unit</button><button class="erase-btn" onclick="clearSlot()">🗑️ Clear</button></div>
                 </div>
-
                 <div style="font-size: 16px; font-weight: bold; color: #00f0ff;">Active Fleet Units</div>
                 <div class="bus-list" id="bus-list"></div>
             </div>
-
-            <div class="map-card">
-                <div id="monitorMap" class="leaflet-map-frame"></div>
-            </div>
+            <div class="map-card"><div id="monitorMap" class="leaflet-map-frame"></div></div>
         </div>
-
     </div>
-
     <script>
-        // Default starting coordinates set to central US (Kansas) until user sets their location
-        let centerLat = 39.8283;
-        let centerLng = -98.5795;
-
-        let setupMap, monitorMap;
-        let setupMarker, monitorAddressMarker;
-        let perimeterPolygon;
+        let centerLat = 39.8283, centerLng = -98.5795;
+        let setupMap, monitorMap, setupMarker, monitorAddressMarker, perimeterPolygon;
         let busMapMarkers = [];
-
-        let CONFIG = {
-            district: "School District Name",
-            school: "School Campus Name",
-            address: "",
-            city: "",
-            state_zip: ""
-        };
-
+        let CONFIG = { district: "", school: "", address: "", city: "", state_zip: "" };
         let fleet = [];
 
         function initFleet() {
             fleet = [];
             for (let i = 1; i <= 20; i++) {
-                let offsetLat = (Math.random() - 0.5) * 0.012;
-                let offsetLng = (Math.random() - 0.5) * 0.012;
-                fleet.push({
-                    slot: i,
-                    id: i === 1 ? '101' : '',
-                    driver: '',
-                    status: 'GREEN',
-                    lat: centerLat + offsetLat,
-                    lng: centerLng + offsetLng
-                });
+                fleet.push({ slot: i, id: i === 1 ? '101' : '', driver: '', status: 'GREEN', lat: centerLat + (Math.random()-0.5)*0.01, lng: centerLng + (Math.random()-0.5)*0.01 });
             }
         }
-
         function initMaps() {
-            // Setup Map
             setupMap = L.map('setupMap').setView([centerLat, centerLng], 4);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(setupMap);
-
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(setupMap);
             setupMarker = L.marker([centerLat, centerLng], { draggable: true }).addTo(setupMap);
-            setupMarker.on('dragend', function (e) {
-                let coord = e.target.getLatLng();
-                centerLat = coord.lat;
-                centerLng = coord.lng;
-                updateCampusPerimeter();
-            });
+            setupMarker.on('dragend', e => { centerLat = e.target.getLatLng().lat; centerLng = e.target.getLatLng().lng; updatePerimeter(); });
+            setupMap.on('click', e => { centerLat = e.latlng.lat; centerLng = e.latlng.lng; setupMarker.setLatLng(e.latlng); updatePerimeter(); });
 
-            setupMap.on('click', function(e) {
-                centerLat = e.latlng.lat;
-                centerLng = e.latlng.lng;
-                setupMarker.setLatLng(e.latlng);
-                updateCampusPerimeter();
-            });
-
-            // Command Monitor Map
             monitorMap = L.map('monitorMap').setView([centerLat, centerLng], 4);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap'
-            }).addTo(monitorMap);
-
-            updateCampusPerimeter();
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(monitorMap);
+            updatePerimeter();
             renderAddressPin();
             renderBusMarkers();
         }
-
-        function updateCampusPerimeter() {
-            let latDelta = 0.0025;
-            let lngDelta = 0.004;
-            let bounds = [
-                [centerLat + latDelta, centerLng - lngDelta],
-                [centerLat + latDelta, centerLng + lngDelta],
-                [centerLat - latDelta, centerLng + lngDelta],
-                [centerLat - latDelta, centerLng - lngDelta]
-            ];
-
-            if (perimeterPolygon) {
-                monitorMap.removeLayer(perimeterPolygon);
-            }
-
-            perimeterPolygon = L.polygon(bounds, {
-                color: '#fbbf24',
-                weight: 3,
-                dashArray: '8, 8',
-                fillColor: '#00f0ff',
-                fillOpacity: 0.12
-            }).addTo(monitorMap);
-
-            perimeterPolygon.bindTooltip("🏫 CAMPUS PERIMETER BOUNDARY", { permanent: true, direction: "top" });
+        function updatePerimeter() {
+            let bounds = [[centerLat+0.002, centerLng-0.003], [centerLat+0.002, centerLng+0.003], [centerLat-0.002, centerLng+0.003], [centerLat-0.002, centerLng-0.003]];
+            if (perimeterPolygon) monitorMap.removeLayer(perimeterPolygon);
+            perimeterPolygon = L.polygon(bounds, { color: '#fbbf24', weight: 3, dashArray: '8, 8', fillColor: '#00f0ff', fillOpacity: 0.12 }).addTo(monitorMap);
         }
-
         function renderAddressPin() {
-            if (monitorAddressMarker) {
-                monitorMap.removeLayer(monitorAddressMarker);
-            }
-
-            let schoolLabel = CONFIG.school || "Campus Location";
-            let addressIcon = L.divIcon({
-                className: 'custom-address-icon',
-                html: `<div style="display: flex; align-items: center; gap: 6px;"><div class="address-pin-dot"></div><span style="background: #020926; color: #fbbf24; padding: 2px 8px; border: 2px solid #fbbf24; border-radius: 4px; font-size: 12px; font-weight: 900; box-shadow: 0 0 10px rgba(0,0,0,0.8);">📍 ${schoolLabel}</span></div>`,
-                iconSize: [220, 30],
-                iconAnchor: [10, 15]
-            });
-
-            monitorAddressMarker = L.marker([centerLat, centerLng], { icon: addressIcon }).addTo(monitorMap);
-            let fullAddr = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ') || 'No address provided';
-            monitorAddressMarker.bindPopup(`
-                <div style="color:#020926; font-family:sans-serif;">
-                    <b style="font-size:15px; color:#d97706;">🎯 Campus Address Target</b><br>
-                    <b>School:</b> ${schoolLabel}<br>
-                    <small>📍 ${fullAddr}</small>
-                </div>
-            `);
+            if (monitorAddressMarker) monitorMap.removeLayer(monitorAddressMarker);
+            let icon = L.divIcon({ html: `<div style="display:flex; align-items:center; gap:6px;"><div class="address-pin-dot"></div><span style="background:#020926; color:#fbbf24; padding:2px 8px; border:2px solid #fbbf24; border-radius:4px; font-weight:900;">📍 ${CONFIG.school || 'Campus'}</span></div>`, iconSize: [180,30], iconAnchor: [10,15] });
+            monitorAddressMarker = L.marker([centerLat, centerLng], { icon: icon }).addTo(monitorMap);
         }
-
         function geocodeAndSave() {
-            CONFIG.district = document.getElementById('cfg-district').value.trim() || "School District";
-            CONFIG.school = document.getElementById('cfg-school').value.trim() || "School Campus";
+            CONFIG.district = document.getElementById('cfg-district').value.trim() || "District";
+            CONFIG.school = document.getElementById('cfg-school').value.trim() || "School";
             CONFIG.address = document.getElementById('cfg-address').value.trim();
             CONFIG.city = document.getElementById('cfg-city').value.trim();
             CONFIG.state_zip = document.getElementById('cfg-state-zip').value.trim();
-
-            let fullQuery = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ');
             
-            if (!fullQuery) {
-                // If no address fields entered, just use current marker position
-                updateCampusPerimeter();
-                renderAddressPin();
-                renderBusMarkers();
-                updateApp();
-                showView('command');
-                return;
-            }
+            let query = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ');
+            if (!query) { updatePerimeter(); renderAddressPin(); renderBusMarkers(); updateApp(); showView('command'); return; }
 
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullQuery)}`)
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.length > 0) {
-                        centerLat = parseFloat(data[0].lat);
-                        centerLng = parseFloat(data[0].lon);
-
-                        setupMap.setView([centerLat, centerLng], 16);
-                        setupMarker.setLatLng([centerLat, centerLng]);
-                        monitorMap.setView([centerLat, centerLng], 16);
-
-                        fleet.forEach(b => {
-                            b.lat = centerLat + (Math.random() - 0.5) * 0.012;
-                            b.lng = centerLng + (Math.random() - 0.5) * 0.012;
-                        });
-
-                        updateCampusPerimeter();
-                        renderAddressPin();
-                        renderBusMarkers();
-                        updateApp();
-                        showView('command');
-                    } else {
-                        alert("Address lookup not found. Coordinates updated to current pin position.");
-                        updateCampusPerimeter();
-                        renderAddressPin();
-                        renderBusMarkers();
-                        updateApp();
-                        showView('command');
+                        centerLat = parseFloat(data[0].lat); centerLng = parseFloat(data[0].lon);
+                        setupMap.setView([centerLat, centerLng], 16); setupMarker.setLatLng([centerLat, centerLng]); monitorMap.setView([centerLat, centerLng], 16);
+                        fleet.forEach(b => { b.lat = centerLat + (Math.random()-0.5)*0.01; b.lng = centerLng + (Math.random()-0.5)*0.01; });
                     }
-                })
-                .catch(() => {
-                    updateCampusPerimeter();
-                    renderAddressPin();
-                    renderBusMarkers();
-                    updateApp();
-                    showView('command');
-                });
+                    updatePerimeter(); renderAddressPin(); renderBusMarkers(); updateApp(); showView('command');
+                }).catch(() => { updatePerimeter(); renderAddressPin(); renderBusMarkers(); updateApp(); showView('command'); });
         }
-
         function renderBusMarkers() {
             busMapMarkers.forEach(m => monitorMap.removeLayer(m));
             busMapMarkers = [];
-
-            fleet.forEach(b => {
-                let unitLabel = b.id ? `#${b.id}` : `S#${b.slot}`;
-                let customIcon = L.divIcon({
-                    className: 'custom-bus-icon',
-                    html: `<div class="bus-marker-pin bus-marker-${b.status}" style="width:28px; height:28px;">${unitLabel}</div>`,
-                    iconSize: [28, 28],
-                    iconAnchor: [14, 14]
-                });
-
-                let marker = L.marker([b.lat, b.lng], { icon: customIcon }).addTo(monitorMap);
-                let fullAddr = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ') || 'Custom Coordinates';
-                
-                marker.bindPopup(`
-                    <div style="color:#020926; font-family:sans-serif;">
-                        <b style="font-size:15px; color:#0055ff;">Bus ${b.id ? '#' + b.id : 'Slot #' + b.slot}</b><br>
-                        <b>Driver:</b> ${b.driver || 'Unassigned'}<br>
-                        <b>Status:</b> <b>${b.status}</b><br>
-                        <small>📍 ${fullAddr}</small>
-                    </div>
-                `);
-
+            fleet.forEach((b, i) => {
+                let icon = L.divIcon({ html: `<div class="bus-marker-pin bus-marker-${b.status}" style="width:28px; height:28px;">${b.id||'S'+b.slot}</div>`, iconSize: [28,28], iconAnchor: [14,14] });
+                let marker = L.marker([b.lat, b.lng], { icon: icon }).addTo(monitorMap);
+                marker.bindPopup(`<b>Bus ${b.id||'Slot #'+b.slot}</b><br>Driver: ${b.driver||'Unassigned'}<br>Status: ${b.status}`);
                 busMapMarkers.push(marker);
             });
         }
-
-        function setDriverStatus(status) {
-            let i = parseInt(document.getElementById('select-active-driver-slot').value) || 0;
-            fleet[i].status = status;
-            renderSidebar();
-            renderBusMarkers();
-        }
-
+        function setDriverStatus(status) { let i = parseInt(document.getElementById('select-active-driver-slot').value)||0; fleet[i].status = status; renderSidebar(); renderBusMarkers(); }
         function updateApp() {
             document.getElementById('header-district-name').innerText = CONFIG.district.toUpperCase();
             document.getElementById('driver-school-display').innerText = `${CONFIG.school} - ${CONFIG.district}`;
-            document.getElementById('driver-address-display').innerText = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ') || 'Ready for custom school entry';
-
-            renderDropdowns();
-            renderSidebar();
-            populateInputs();
-            syncDriverView();
+            document.getElementById('driver-address-display').innerText = [CONFIG.address, CONFIG.city, CONFIG.state_zip].filter(Boolean).join(', ') || 'Ready';
+            renderDropdowns(); renderSidebar(); populateInputs(); syncDriverView();
         }
-
         function renderDropdowns() {
-            let options = fleet.map((b, i) => `<option value="${i}">${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot} ${b.driver ? '(' + b.driver + ')' : ''}</option>`).join('');
-            document.getElementById('select-slot').innerHTML = options;
-            document.getElementById('select-active-driver-slot').innerHTML = options;
+            let opt = fleet.map((b,i)=>`<option value="${i}">Bus ${b.id||'#'+b.slot} ${b.driver?'('+b.driver+')':''}</option>`).join('');
+            document.getElementById('select-slot').innerHTML = opt; document.getElementById('select-active-driver-slot').innerHTML = opt;
         }
-
-        function populateInputs() {
-            let i = parseInt(document.getElementById('select-slot').value) || 0;
-            document.getElementById('input-bus-num').value = fleet[i].id;
-            document.getElementById('input-driver-name').value = fleet[i].driver;
-        }
-
-        function saveSlot() {
-            let i = parseInt(document.getElementById('select-slot').value);
-            fleet[i].id = document.getElementById('input-bus-num').value.trim();
-            fleet[i].driver = document.getElementById('input-driver-name').value.trim();
-
-            renderDropdowns();
-            document.getElementById('select-slot').value = i;
-            renderSidebar();
-            syncDriverView();
-            renderBusMarkers();
-        }
-
-        function clearSlot() {
-            let i = parseInt(document.getElementById('select-slot').value);
-            fleet[i].id = '';
-            fleet[i].driver = '';
-            document.getElementById('input-bus-num').value = '';
-            document.getElementById('input-driver-name').value = '';
-
-            renderDropdowns();
-            document.getElementById('select-slot').value = i;
-            renderSidebar();
-            syncDriverView();
-            renderBusMarkers();
-        }
-
-        function syncDriverView() {
-            let i = parseInt(document.getElementById('select-active-driver-slot').value) || 0;
-            document.getElementById('driver-bus-title').innerText = fleet[i].id ? `Bus #${fleet[i].id}` : `Slot #${fleet[i].slot}`;
-            document.getElementById('driver-name-sub').innerText = fleet[i].driver ? `Driver: ${fleet[i].driver}` : `Driver: Unassigned`;
-        }
-
+        function populateInputs() { let i = parseInt(document.getElementById('select-slot').value)||0; document.getElementById('input-bus-num').value = fleet[i].id; document.getElementById('input-driver-name').value = fleet[i].driver; }
+        function saveSlot() { let i = parseInt(document.getElementById('select-slot').value); fleet[i].id = document.getElementById('input-bus-num').value.trim(); fleet[i].driver = document.getElementById('input-driver-name').value.trim(); renderDropdowns(); document.getElementById('select-slot').value = i; renderSidebar(); syncDriverView(); renderBusMarkers(); }
+        function clearSlot() { let i = parseInt(document.getElementById('select-slot').value); fleet[i].id = ''; fleet[i].driver = ''; document.getElementById('input-bus-num').value = ''; document.getElementById('input-driver-name').value = ''; renderDropdowns(); document.getElementById('select-slot').value = i; renderSidebar(); syncDriverView(); renderBusMarkers(); }
+        function syncDriverView() { let i = parseInt(document.getElementById('select-active-driver-slot').value)||0; document.getElementById('driver-bus-title').innerText = fleet[i].id?`Bus #${fleet[i].id}`:`Slot #${fleet[i].slot}`; document.getElementById('driver-name-sub').innerText = fleet[i].driver?`Driver: ${fleet[i].driver}`:`Driver: Unassigned`; }
         function renderSidebar() {
-            document.getElementById('bus-list').innerHTML = fleet.map((b, i) => `
-                <div class="bus-item" onclick="focusBusOnMap(${i})" style="border-left-color: ${b.status==='GREEN'?'#22c55e':(b.status==='YELLOW'?'#eab308':(b.status==='ORANGE'?'#f97316':'#ef4444'))}">
-                    <div><b>${b.id ? 'Bus #' + b.id : 'Slot #' + b.slot}</b> (${b.driver || 'Unassigned'})</div>
-                    <span class="badge badge-${b.status}">${b.status}</span>
-                </div>
-            `).join('');
+            document.getElementById('bus-list').innerHTML = fleet.map((b,i)=>`<div class="bus-item" onclick="monitorMap.setView([${b.lat},${b.lng}],18)"><div><b>Bus ${b.id||'#'+b.slot}</b> (${b.driver||'Unassigned'})</div><span class="badge badge-${b.status}">${b.status}</span></div>`).join('');
         }
-
-        function focusBusOnMap(index) {
-            let b = fleet[index];
-            monitorMap.setView([b.lat, b.lng], 18);
-            if (busMapMarkers[index]) {
-                busMapMarkers[index].openPopup();
-            }
+        function showView(v) {
+            document.getElementById('setup-view').classList.toggle('hidden', v!=='setup');
+            document.getElementById('driver-view').classList.toggle('hidden', v!=='driver');
+            document.getElementById('command-view').classList.toggle('hidden', v!=='command');
+            document.getElementById('tab-setup').classList.toggle('active', v==='setup');
+            document.getElementById('tab-driver').classList.toggle('active', v==='driver');
+            document.getElementById('tab-command').classList.toggle('active', v==='command');
+            setTimeout(() => { if(v==='setup') setupMap.invalidateSize(); if(v==='command') monitorMap.invalidateSize(); }, 100);
         }
-
-        function showView(view) {
-            document.getElementById('setup-view').classList.toggle('hidden', view !== 'setup');
-            document.getElementById('driver-view').classList.toggle('hidden', view !== 'driver');
-            document.getElementById('command-view').classList.toggle('hidden', view !== 'command');
-
-            document.getElementById('tab-setup').classList.toggle('active', view === 'setup');
-            document.getElementById('tab-driver').classList.toggle('active', view === 'driver');
-            document.getElementById('tab-command').classList.toggle('active', view === 'command');
-
-            setTimeout(() => {
-                if (view === 'setup' && setupMap) setupMap.invalidateSize();
-                if (view === 'command' && monitorMap) monitorMap.invalidateSize();
-            }, 100);
-        }
-
-        window.onload = function() {
-            initFleet();
-            initMaps();
-            updateApp();
-            showView('setup');
-        };
+        window.onload = () => { initFleet(); initMaps(); updateApp(); showView('setup'); };
     </script>
 </body>
 </html>
